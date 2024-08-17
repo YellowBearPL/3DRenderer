@@ -21,12 +21,34 @@ SDL_Color operator*(const SDL_Color &color, const double &f)
     return {static_cast<Uint8>(color.r * f), static_cast<Uint8>(color.g * f), static_cast<Uint8>(color.b * f), color.a};
 }
 
+SDL_Color operator*(const double &f, const SDL_Color &color)
+{
+    return color * f;
+}
+
+SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2)
+{
+    return {static_cast<Uint8>(v1.r + v2.r), static_cast<Uint8>(v1.b + v2.b), static_cast<Uint8>(v1.g + v2.g), static_cast<Uint8>(v1.a + v2.a)};
+}
+
+SDL_Color computeReflectionColor()
+{
+    return {};
+}
+
+SDL_Color computeRefractionColor()
+{
+    return {};
+}
+
 int main()
 {
     std::vector<std::shared_ptr<Object>> objects;
     Point eyePosition;
     Point lightPosition;
     Light light{};
+    SDL_Color glassBallColorAtHit;
+    float refractiveIndex = 1.1;
     SDL_Event event;
     SDL_Renderer *renderer;
     SDL_Window *window;
@@ -99,12 +121,12 @@ int main()
                     Ray primRay;
                     primRay.computePrimRay(i, j);
                     Point pHit;
-                    Normal nHit;
+                    Normal normalHit;
                     float minDist = INFINITY;
                     std::shared_ptr<Object> object = nullptr;
                     for (auto &k : objects)
                     {
-                        if (k->intersect(primRay, pHit, nHit))
+                        if (k->intersect(primRay, pHit, normalHit))
                         {
                             float distance = eyePosition.distance(pHit);
                             if (distance < minDist)
@@ -119,27 +141,14 @@ int main()
                     {
                         Ray shadowRay;
                         shadowRay.direction = lightPosition - pHit;
-                        bool isInShadow = false;
-                        for (auto &k : objects)
-                        {
-                            if (k->intersect(shadowRay))
-                            {
-                                isInShadow = true;
-                                break;
-                            }
-                        }
-
-                        SDL_Color color;
-                        if (!isInShadow)
-                        {
-                            color = object->color * light.brightness;
-                        }
-                        else
-                        {
-                            color = {};
-                        }
-
-                        SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+                        SDL_Color reflectionColor = computeReflectionColor();
+                        SDL_Color refractionColor = computeRefractionColor();
+                        float kr;
+                        float kt;
+                        Vec3f primaryRayDirection = primRay.direction;
+                        normalHit.fresnel(refractiveIndex, primaryRayDirection, kr, kt);
+                        glassBallColorAtHit = kr * reflectionColor + kt * refractionColor;
+                        SDL_SetRenderDrawColor(renderer, glassBallColorAtHit.r, glassBallColorAtHit.g, glassBallColorAtHit.b, glassBallColorAtHit.a);
                         SDL_RenderDrawPoint(renderer, i, j);
                     }
                 }

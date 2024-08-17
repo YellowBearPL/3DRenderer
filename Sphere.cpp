@@ -25,5 +25,6 @@ bool Sphere::intersect(const Ray &ray, Point &point, Normal &normal) const
 
     point = ray.orig + ray.direction * t;
     normal = point - center;
+    normal.normalize();
     return true;
 }
