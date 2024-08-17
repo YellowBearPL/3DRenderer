@@ -17,7 +17,7 @@ public:
     Vec3<T> operator+(const Vec3<T> &v) const { return {x + v.x, y + v.y, z + v.z}; }
     [[nodiscard]] T length2() const { return x * x + y * y + z * z; }
     [[nodiscard]] T distance(const Vec3<T> &v) const { return sqrt((v - *this).length2()); }
-    void fresnel(float refractiveIndex, const Vec3<float> &direction, float &kr, float &kt) { float facingratio = -direction.dot(*this); kr = float(0.1 + (pow(1 - facingratio, 3) * .9)); kt = 1 - kr; }
+    void fresnel(const Vec3<float> &direction, float &kr, float &kt) { float facingratio = -direction.dot(*this); kr = float(0.1 + (pow(1 - facingratio, 3) * .9)); kt = 1 - kr; }
 };
 
 using Vec3f = Vec3<float>;

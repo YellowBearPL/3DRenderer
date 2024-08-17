@@ -1,5 +1,3 @@
-#include "Light.h"
-#include "Object.h"
 #include "Ray.h"
 #include "Sphere.h"
 #include "imgui/imgui.h"
@@ -9,46 +7,15 @@
 #include <array>
 #include <cmath>
 #include <memory>
-#include <vector>
 
 constexpr int imageHeight = 1080, imageWidth = 1920;
 constexpr float invWidth = 1 / float(imageWidth), invHeight = 1 / float(imageHeight);
 constexpr float fov = 30, aspectratio = imageWidth / float(imageHeight);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
 
-SDL_Color operator*(const SDL_Color &color, const double &f)
-{
-    return {static_cast<Uint8>(color.r * f), static_cast<Uint8>(color.g * f), static_cast<Uint8>(color.b * f), color.a};
-}
-
-SDL_Color operator*(const double &f, const SDL_Color &color)
-{
-    return color * f;
-}
-
-SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2)
-{
-    return {static_cast<Uint8>(v1.r + v2.r), static_cast<Uint8>(v1.b + v2.b), static_cast<Uint8>(v1.g + v2.g), static_cast<Uint8>(v1.a + v2.a)};
-}
-
-SDL_Color computeReflectionColor()
-{
-    return {};
-}
-
-SDL_Color computeRefractionColor()
-{
-    return {};
-}
-
 int main()
 {
-    std::vector<std::shared_ptr<Object>> objects;
-    Point eyePosition;
-    Point lightPosition;
-    Light light{};
-    SDL_Color glassBallColorAtHit;
-    float refractiveIndex = 1.1;
+    SDL_Color color;
     SDL_Event event;
     SDL_Renderer *renderer;
     SDL_Window *window;
@@ -62,7 +29,9 @@ int main()
     ImGui::StyleColorsDark();
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer2_Init(renderer);
-    std::array<float, 4> center{0, 0, -30, 2}, fColor{0, 1, 0, 1}, lp{0, 1, 0, 1};
+    std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1};
+    bool glass = false;
+    float bias = 1e-4, index = 1.1;
     while (true)
     {
         if (SDL_PollEvent(&event))
@@ -80,11 +49,11 @@ int main()
         ImGui::Begin("Ray Tracing!");
         if (ImGui::CollapsingHeader("Objects"))
         {
-            for (auto k = objects.begin(); k != objects.end();)
+            for (auto k = Ray::objects.begin(); k != Ray::objects.end();)
             {
-                if (ImGui::ColorButton(("Delete" + std::to_string(k - objects.begin())).c_str(), {float(k->get()->color.r) / 255, float(k->get()->color.g) / 255, float(k->get()->color.b) / 255, float(k->get()->color.a) / 255}))
+                if (ImGui::ColorButton(("Delete" + std::to_string(k - Ray::objects.begin())).c_str(), {float(k->get()->color.r) / 255, float(k->get()->color.g) / 255, float(k->get()->color.b) / 255, float(k->get()->color.a) / 255}))
                 {
-                    objects.erase(k);
+                    Ray::objects.erase(k);
                 }
                 else
                 {
@@ -92,26 +61,35 @@ int main()
                 }
             }
 
-            ImGui::InputFloat3("Center", center.data());
-            ImGui::InputFloat("Radius", center.data() + 3);
-            ImGui::ColorPicker4("Color", fColor.data());
+            ImGui::InputFloat3("Center", sphere.data());
+            ImGui::InputFloat("Radius", sphere.data() + 3);
+            ImGui::ColorPicker4("Color", fgColor.data());
+            ImGui::Checkbox("Glass?", &glass);
+            if (glass)
+            {
+                ImGui::InputFloat("index", &index);
+            }
+
             if (ImGui::Button("Add sphere"))
             {
-                objects.push_back(std::make_shared<Sphere>(Point(center[0], center[1], center[2]), center[3], SDL_Color(Uint8(fColor[0] * 255), Uint8(fColor[1] * 255), Uint8(fColor[2] * 255), Uint8(fColor[3] * 255))));
+                Ray::objects.push_back(std::make_shared<Sphere>(Point(sphere[0], sphere[1], sphere[2]), sphere[3], SDL_Color(Uint8(fgColor[0] * 255), Uint8(fgColor[1] * 255), Uint8(fgColor[2] * 255), Uint8(fgColor[3] * 255)), glass, index));
             }
         }
 
+        ImGui::ColorPicker4("Background color", bgColor.data());
+        ImGui::InputFloat("Bias", &bias, 0.0f, 0.0f, "%.4f");
         if (ImGui::CollapsingHeader("Light"))
         {
             ImGui::InputFloat3("Position", lp.data());
-            ImGui::SameLine();
-            ImGui::InputFloat("Brightness", lp.data() + 3);
+            ImGui::SliderFloat("Brightness", lp.data() + 3, 0, 1);
         }
 
         if (ImGui::Button("Render"))
         {
-            lightPosition = {lp[0], lp[1], lp[2]};
-            light.brightness = lp[3];
+            Ray::backgroundColor = {Uint8(bgColor[0] * 255), Uint8(bgColor[1] * 255), Uint8(bgColor[2] * 255), Uint8(bgColor[3] * 255)};
+            Ray::bias = bias;
+            Ray::lightPosition = {lp[0], lp[1], lp[2]};
+            Ray::light.brightness = lp[3];
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
             SDL_RenderClear(renderer);
             for (int j = 0; j < imageHeight; j++)
@@ -120,37 +98,9 @@ int main()
                 {
                     Ray primRay;
                     primRay.computePrimRay(i, j);
-                    Point pHit;
-                    Normal normalHit;
-                    float minDist = INFINITY;
-                    std::shared_ptr<Object> object = nullptr;
-                    for (auto &k : objects)
-                    {
-                        if (k->intersect(primRay, pHit, normalHit))
-                        {
-                            float distance = eyePosition.distance(pHit);
-                            if (distance < minDist)
-                            {
-                                object = k;
-                                minDist = distance;
-                            }
-                        }
-                    }
-
-                    if (object != nullptr)
-                    {
-                        Ray shadowRay;
-                        shadowRay.direction = lightPosition - pHit;
-                        SDL_Color reflectionColor = computeReflectionColor();
-                        SDL_Color refractionColor = computeRefractionColor();
-                        float kr;
-                        float kt;
-                        Vec3f primaryRayDirection = primRay.direction;
-                        normalHit.fresnel(refractiveIndex, primaryRayDirection, kr, kt);
-                        glassBallColorAtHit = kr * reflectionColor + kt * refractionColor;
-                        SDL_SetRenderDrawColor(renderer, glassBallColorAtHit.r, glassBallColorAtHit.g, glassBallColorAtHit.b, glassBallColorAtHit.a);
-                        SDL_RenderDrawPoint(renderer, i, j);
-                    }
+                    color = primRay.trace(0);
+                    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+                    SDL_RenderDrawPoint(renderer, i, j);
                 }
             }
         }

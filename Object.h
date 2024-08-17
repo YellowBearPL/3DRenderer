@@ -1,12 +1,16 @@
 #ifndef INC_3DRENDERER_OBJECT_H
 #define INC_3DRENDERER_OBJECT_H
-#include "Ray.h"
+#include "Vec3.h"
 #include <SDL2/SDL.h>
+
+class Ray;
 
 class Object
 {
 public:
     SDL_Color color{};
+    bool isGlass{};
+    float indexOfRefraction{};
 
     virtual ~Object() = default;
     virtual bool intersect(const Ray &ray, Point &point, Normal &normal) const = 0;

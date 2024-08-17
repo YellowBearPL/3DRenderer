@@ -1,9 +1,10 @@
 #include "Sphere.h"
 #include <cmath>
+#include "Ray.h"
 
 bool Sphere::intersect(const Ray &ray, Point &point, Normal &normal) const
 {
-    Vec3f l = center - ray.orig;
+    Vec3f l = center - ray.origin;
     float tca = l.dot(ray.direction);
     if (tca < 0)
     {
@@ -23,7 +24,7 @@ bool Sphere::intersect(const Ray &ray, Point &point, Normal &normal) const
         t = tca + thc;
     }
 
-    point = ray.orig + ray.direction * t;
+    point = ray.origin + ray.direction * t;
     normal = point - center;
     normal.normalize();
     return true;
