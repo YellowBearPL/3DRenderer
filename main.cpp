@@ -13,25 +13,37 @@ constexpr float invWidth = 1 / float(imageWidth), invHeight = 1 / float(imageHei
 constexpr float fov = 30, aspectratio = imageWidth / float(imageHeight);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
 
+
+void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color)
+{
+    for (int t = 0; t < 100; t++)
+    {
+        auto x = int(x0 + ((x1 - x0) * (t / 100.)));
+        auto y = int(y0 + ((y1 - y0) * (t / 100.)));
+        SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
+        SDL_RenderDrawPoint(image, x, y);
+    }
+}
+
 int main()
 {
     const SDL_Color white{255, 255, 255, 255};
     const SDL_Color red{255, 0, 0, 255};
     SDL_Color color;
     SDL_Event event;
-    SDL_Renderer *renderer;
+    SDL_Renderer *image;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(imageWidth, imageHeight, 0, &window, &renderer);
-    SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, imageWidth, imageHeight);
+    SDL_CreateWindowAndRenderer(imageWidth, imageHeight, 0, &window, &image);
+    SDL_Texture *texture = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, imageWidth, imageHeight);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
     ImGui::StyleColorsDark();
-    ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
-    ImGui_ImplSDLRenderer2_Init(renderer);
+    ImGui_ImplSDL2_InitForSDLRenderer(window, image);
+    ImGui_ImplSDLRenderer2_Init(image);
     std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1};
     bool glass = false;
     float bias = 1e-4, index = 1.1;
@@ -94,8 +106,8 @@ int main()
             Ray::bias = bias;
             Ray::lightPosition = {lp[0], lp[1], lp[2]};
             Ray::light.brightness = lp[3];
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-            SDL_RenderClear(renderer);
+            SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
+            SDL_RenderClear(image);
             for (int j = 0; j < imageHeight; j++)
             {
                 for (int i = 0; i < imageWidth; i++)
@@ -103,8 +115,8 @@ int main()
                     Ray primRay;
                     primRay.computePrimRay(i, j);
                     color = primRay.trace(0);
-                    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-                    SDL_RenderDrawPoint(renderer, i, j);
+                    SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
+                    SDL_RenderDrawPoint(image, i, j);
                 }
             }
         }
@@ -114,22 +126,21 @@ int main()
         ImGui::Checkbox("Render", &rasterizer);
         if (rasterizer)
         {
-            SDL_SetRenderTarget(renderer, texture);
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-            SDL_RenderClear(renderer);
-            SDL_SetRenderDrawColor(renderer, red.r, red.g, red.b, red.a);
-            SDL_RenderDrawPoint(renderer, 52, 41);
-            SDL_SetRenderTarget(renderer, nullptr);
-            SDL_RenderCopyEx(renderer, texture, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
+            SDL_SetRenderTarget(image, texture);
+            SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
+            SDL_RenderClear(image);
+            line(13, 20, 80, 40, image, white);
+            SDL_SetRenderTarget(image, nullptr);
+            SDL_RenderCopyEx(image, texture, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }
 
         ImGui::End();
         ImGui::Render();
-        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
-        SDL_RenderPresent(renderer);
+        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), image);
+        SDL_RenderPresent(image);
     }
 
-    SDL_DestroyRenderer(renderer);
+    SDL_DestroyRenderer(image);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
