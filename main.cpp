@@ -16,59 +16,39 @@ constexpr int height = 1080, width = 1920;
 constexpr float invWidth = 1 / float(width), invHeight = 1 / float(height);
 constexpr float fov = 30, aspectratio = width / float(height);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
+constexpr SDL_Color red{255, 0, 0, 255};
+SDL_Color green;
 
-void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color)
+void triangle(Vec2i t0, Vec2i t1, Vec2i t2, SDL_Renderer *image, SDL_Color color)
 {
-    bool steep = false;
-    if (std::abs(x0 - x1) < std::abs(y0 - y1))
+    if (t0.v > t1.v)
     {
-        std::swap(x0, y0);
-        std::swap(x1, y1);
-        steep = true;
+        std::swap(t0, t1);
     }
 
-    if (x0 > x1)
+    if (t0.v > t2.v)
     {
-        std::swap(x0, x1);
-        std::swap(y0, y1);
+        std::swap(t0, t2);
     }
 
-    int dx = x1 - x0;
-    int dy = y1 - y0;
-    int derror2 = std::abs(dy) * 2;
-    int error2 = 0;
-    int y = y0;
-    SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
-    for (int x = x0; x <= x1; x++)
+    if (t1.v > t2.v)
     {
-        if (steep)
-        {
-            SDL_RenderDrawPoint(image, y, x);
-        }
-        else
-        {
-            SDL_RenderDrawPoint(image, x, y);
-        }
-
-        error2 += derror2;
-        if (error2 > dx)
-        {
-            y += (y1 > y0 ? 1 : -1);
-            error2 -= dx * 2;
-        }
+        std::swap(t1, t2);
     }
+
+    t0.line(t1, image, green);
+    t1.line(t2, image, green);
+    t2.line(t0, image, red);
 }
 
 int main()
 {
     SDL_Color color;
     const SDL_Color white{255, 255, 255, 255};
-    const SDL_Color red{255, 0, 0, 255};
     std::unique_ptr<Model> model;
     std::array<Vec2i, 3> t0 = {Vec2i(10, 70), Vec2i(50, 160), Vec2i(70, 80)};
     std::array<Vec2i, 3> t1 = {Vec2i(180, 50), Vec2i(150, 1), Vec2i(70, 180)};
     std::array<Vec2i, 3> t2 = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)};
-    SDL_Color green;
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
@@ -185,9 +165,9 @@ int main()
             SDL_SetRenderTarget(image, texture);
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
-            t0[0].triangle(t0[1], t0[2], image, red);
-            t1[0].triangle(t1[1], t1[2], image, white);
-            t2[0].triangle(t2[1], t2[2], image, green);
+            triangle(t0[0], t0[1], t0[2], image, red);
+            triangle(t1[0], t1[1], t1[2], image, white);
+            triangle(t2[0], t2[1], t2[2], image, green);
             SDL_SetRenderTarget(image, nullptr);
             SDL_RenderCopyEx(image, texture, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }
