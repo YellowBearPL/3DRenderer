@@ -1,6 +1,7 @@
 #include "Model.h"
 #include "Ray.h"
 #include "Sphere.h"
+#include "Vec2.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl2.h"
 #include "imgui/imgui_impl_sdlrenderer2.h"
@@ -15,7 +16,6 @@ constexpr int height = 1080, width = 1920;
 constexpr float invWidth = 1 / float(width), invHeight = 1 / float(height);
 constexpr float fov = 30, aspectratio = width / float(height);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
-
 
 void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color)
 {
@@ -65,6 +65,10 @@ int main()
     const SDL_Color white{255, 255, 255, 255};
     const SDL_Color red{255, 0, 0, 255};
     std::unique_ptr<Model> model;
+    std::array<Vec2i, 3> t0 = {Vec2i(10, 70), Vec2i(50, 160), Vec2i(70, 80)};
+    std::array<Vec2i, 3> t1 = {Vec2i(180, 50), Vec2i(150, 1), Vec2i(70, 180)};
+    std::array<Vec2i, 3> t2 = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)};
+    SDL_Color green;
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
@@ -79,7 +83,7 @@ int main()
     ImGui::StyleColorsDark();
     ImGui_ImplSDL2_InitForSDLRenderer(window, image);
     ImGui_ImplSDLRenderer2_Init(image);
-    std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1};
+    std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1}, thirdColor{0, 1, 0, 1};
     bool glass = false;
     float bias = 1e-4, index = 1.1;
     std::filesystem::directory_iterator objDirectory{"obj/"};
@@ -130,7 +134,7 @@ int main()
 
             if (ImGui::Button("Add sphere"))
             {
-                Ray::objects.push_back(std::make_shared<Sphere>(Point(sphere[0], sphere[1], sphere[2]), sphere[3], SDL_Color(Uint8(fgColor[0] * 255), Uint8(fgColor[1] * 255), Uint8(fgColor[2] * 255), Uint8(fgColor[3] * 255)), glass, index));
+                Ray::objects.push_back(std::make_shared<Sphere>(Point(sphere[0], sphere[1], sphere[2]), sphere[3], SDL_Color(static_cast<Uint8>(fgColor[0] * 255), static_cast<Uint8>(fgColor[1] * 255), static_cast<Uint8>(fgColor[2] * 255), static_cast<Uint8>(fgColor[3] * 255)), glass, index));
             }
         }
 
@@ -144,7 +148,7 @@ int main()
 
         if (ImGui::Button("Render"))
         {
-            Ray::backgroundColor = {Uint8(bgColor[0] * 255), Uint8(bgColor[1] * 255), Uint8(bgColor[2] * 255), Uint8(bgColor[3] * 255)};
+            Ray::backgroundColor = {static_cast<Uint8>(bgColor[0] * 255), static_cast<Uint8>(bgColor[1] * 255), static_cast<Uint8>(bgColor[2] * 255), static_cast<Uint8>(bgColor[3] * 255)};
             Ray::bias = bias;
             Ray::lightPosition = {lp[0], lp[1], lp[2]};
             Ray::light.brightness = lp[3];
@@ -173,27 +177,17 @@ int main()
             }
         }
 
+        ImGui::ColorPicker4("Third color", thirdColor.data());
         if (ImGui::Button("Render"))
         {
             model = std::make_unique<Model>(("obj/" + filename).c_str());
+            green = {static_cast<Uint8>(thirdColor[0] * 255), static_cast<Uint8>(thirdColor[1] * 255), static_cast<Uint8>(thirdColor[2] * 255), static_cast<Uint8>(thirdColor[3] * 255)};
             SDL_SetRenderTarget(image, texture);
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
-            for (int i = 0; i < model->nfaces(); i++)
-            {
-                std::vector<int> face = model->face(i);
-                for (int j = 0; j < 3; j++)
-                {
-                    Vec3f v0 = model->vert(face[j]);
-                    Vec3f v1 = model->vert(face[(j + 1) % 3]);
-                    auto x0 = int((v0.x + 4.) * width / 8.);
-                    auto y0 = int((v0.y + 4.) * height / 8.);
-                    auto x1 = int((v1.x + 4.) * width / 8.);
-                    auto y1 = int((v1.y + 4.) * height / 8.);
-                    line(x0, y0, x1, y1, image, white);
-                }
-            }
-
+            t0[0].triangle(t0[1], t0[2], image, red);
+            t1[0].triangle(t1[1], t1[2], image, white);
+            t2[0].triangle(t2[1], t2[2], image, green);
             SDL_SetRenderTarget(image, nullptr);
             SDL_RenderCopyEx(image, texture, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }
