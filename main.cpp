@@ -16,25 +16,31 @@ const float angle = float(tan(M_PI * 0.5 * fov / 180.));
 
 void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color)
 {
-    int dx = x1 - x0;
-    int dy = y1 - y0;
-    if (dx > dy)
+    bool steep = false;
+    if (std::abs(x0 - x1) < std::abs(y0 - y1))
     {
-        for (int x = x0; x <= x1; x++)
-        {
-            auto t = float(x - x0) / float(x1 - x0);
-            auto y = int((y0 * (1. - t)) + (float(y1) * t));
-            SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
-            SDL_RenderDrawPoint(image, x, y);
-        }
+        std::swap(x0, y0);
+        std::swap(x1, y1);
+        steep = true;
     }
-    else
+
+    if (x0 > x1)
     {
-        for (int y = y0; y <= y1; y++)
+        std::swap(x0, x1);
+        std::swap(y0, y1);
+    }
+
+    for (int x = x0; x <= x1; x++)
+    {
+        auto t = float(x - x0) / float(x1 - x0);
+        int y = int((y0 * (1. - t)) + (float(y1) * t));
+        SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
+        if (steep)
         {
-            auto t = float(y - y0) / float(y1 - y0);
-            auto x = int((x0 * (1. - t)) + (float(x1) * t));
-            SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
+            SDL_RenderDrawPoint(image, y, x);
+        }
+        else
+        {
             SDL_RenderDrawPoint(image, x, y);
         }
     }
