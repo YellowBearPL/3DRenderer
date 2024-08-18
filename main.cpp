@@ -130,6 +130,8 @@ int main()
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
             line(13, 20, 80, 40, image, white);
+            line(20, 13, 40, 80, image, red);
+            line(80, 40, 13, 20, image, red);
             SDL_SetRenderTarget(image, nullptr);
             SDL_RenderCopyEx(image, texture, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }
