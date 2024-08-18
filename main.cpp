@@ -37,6 +37,7 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, SDL_Renderer *image, SDL_Color color
     }
 
     int totalHeight = t2.v - t0.v;
+    SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
     for (int y = t0.v; y <= t1.v; y++)
     {
         int segmentHeight = t1.v - t0.v + 1;
@@ -44,10 +45,33 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, SDL_Renderer *image, SDL_Color color
         float beta  = float(y - t0.v) / float(segmentHeight);
         Vec2i a = t0 + ((t2 - t0) * alpha);
         Vec2i b = t0 + ((t1 - t0) * beta);
-        SDL_SetRenderDrawColor(image, red.r, red.g, red.b, red.a);
-        SDL_RenderDrawPoint(image, a.u, y);
-        SDL_SetRenderDrawColor(image, green.r, green.g, green.b, green.a);
-        SDL_RenderDrawPoint(image, b.u, y);
+        if (a.u > b.u)
+        {
+            std::swap(a, b);
+        }
+
+        for (int j = a.u; j <= b.u; j++)
+        {
+            SDL_RenderDrawPoint(image, j, y);
+        }
+    }
+
+    for (int y = t1.v; y <= t2.v; y++)
+    {
+        int segmentHeight = t2.v - t1.v + 1;
+        float alpha = float(y - t0.v) / float(totalHeight);
+        float beta  = float(y - t1.v) / float(segmentHeight);
+        Vec2i a = t0 + ((t2 - t0) * alpha);
+        Vec2i b = t1 + ((t2 - t1) * beta);
+        if (a.u > b.u)
+        {
+            std::swap(a, b);
+        }
+
+        for (int j = a.u; j <= b.u; j++)
+        {
+            SDL_RenderDrawPoint(image, j, y);
+        }
     }
 }
 
