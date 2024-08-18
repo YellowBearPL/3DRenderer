@@ -1,3 +1,4 @@
+#include "Model.h"
 #include "Ray.h"
 #include "Sphere.h"
 #include "imgui/imgui.h"
@@ -6,11 +7,13 @@
 #include <SDL2/SDL.h>
 #include <array>
 #include <cmath>
+#include <filesystem>
+#include <iostream>
 #include <memory>
 
-constexpr int imageHeight = 1080, imageWidth = 1920;
-constexpr float invWidth = 1 / float(imageWidth), invHeight = 1 / float(imageHeight);
-constexpr float fov = 30, aspectratio = imageWidth / float(imageHeight);
+constexpr int height = 1080, width = 1920;
+constexpr float invWidth = 1 / float(width), invHeight = 1 / float(height);
+constexpr float fov = 30, aspectratio = width / float(height);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
 
 
@@ -58,15 +61,16 @@ void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color)
 
 int main()
 {
+    SDL_Color color;
     const SDL_Color white{255, 255, 255, 255};
     const SDL_Color red{255, 0, 0, 255};
-    SDL_Color color;
+    std::unique_ptr<Model> model;
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(imageWidth, imageHeight, 0, &window, &image);
-    SDL_Texture *texture = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, imageWidth, imageHeight);
+    SDL_CreateWindowAndRenderer(width, height, 0, &window, &image);
+    SDL_Texture *texture = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, width, height);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
@@ -78,7 +82,14 @@ int main()
     std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1};
     bool glass = false;
     float bias = 1e-4, index = 1.1;
-    bool rasterizer = false;
+    std::filesystem::directory_iterator objDirectory{"obj/"};
+    std::vector<std::string> objFiles;
+    for (auto &file : objDirectory)
+    {
+        objFiles.push_back(file.path().filename().generic_string());
+    }
+
+    std::string filename;
     while (true)
     {
         if (SDL_PollEvent(&event))
@@ -139,9 +150,9 @@ int main()
             Ray::light.brightness = lp[3];
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
-            for (int j = 0; j < imageHeight; j++)
+            for (int j = 0; j < height; j++)
             {
-                for (int i = 0; i < imageWidth; i++)
+                for (int i = 0; i < width; i++)
                 {
                     Ray primRay;
                     primRay.computePrimRay(i, j);
@@ -154,15 +165,35 @@ int main()
 
         ImGui::End();
         ImGui::Begin("Rasterization!");
-        ImGui::Checkbox("Render", &rasterizer);
-        if (rasterizer)
+        for (auto &file : objFiles)
         {
+            if (ImGui::RadioButton(file.c_str(), filename == file))
+            {
+                filename = file;
+            }
+        }
+
+        if (ImGui::Button("Render"))
+        {
+            model = std::make_unique<Model>(("obj/" + filename).c_str());
             SDL_SetRenderTarget(image, texture);
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
-            line(13, 20, 80, 40, image, white);
-            line(20, 13, 40, 80, image, red);
-            line(80, 40, 13, 20, image, red);
+            for (int i = 0; i < model->nfaces(); i++)
+            {
+                std::vector<int> face = model->face(i);
+                for (int j = 0; j < 3; j++)
+                {
+                    Vec3f v0 = model->vert(face[j]);
+                    Vec3f v1 = model->vert(face[(j + 1) % 3]);
+                    auto x0 = int((v0.x + 4.) * width / 8.);
+                    auto y0 = int((v0.y + 4.) * height / 8.);
+                    auto x1 = int((v1.x + 4.) * width / 8.);
+                    auto y1 = int((v1.y + 4.) * height / 8.);
+                    line(x0, y0, x1, y1, image, white);
+                }
+            }
+
             SDL_SetRenderTarget(image, nullptr);
             SDL_RenderCopyEx(image, texture, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }

@@ -28,6 +28,8 @@ add_executable(3DRenderer main.cpp
         imgui/imgui_impl_sdl2.cpp
         imgui/imgui_impl_sdl2.h
         imgui/imgui_impl_sdlrenderer2.cpp
-        imgui/imgui_impl_sdlrenderer2.h)
+        imgui/imgui_impl_sdlrenderer2.h
+        Model.cpp
+        Model.h)
 
 target_link_libraries(3DRenderer SDL2)
