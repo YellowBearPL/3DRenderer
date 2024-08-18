@@ -8,57 +8,41 @@
 #include <SDL2/SDL.h>
 #include <array>
 #include <cmath>
-#include <filesystem>
 #include <iostream>
 #include <memory>
 
-constexpr int height = 1080, width = 1920;
-constexpr float invWidth = 1 / float(width), invHeight = 1 / float(height);
-constexpr float fov = 30, aspectratio = width / float(height);
+const int width = 1920;
+const int height = 1080;
+const float invWidth = 1 / float(width), invHeight = 1 / float(height);
+const float fov = 30, aspectratio = width / float(height);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
-constexpr SDL_Color red{255, 0, 0, 255};
-SDL_Color green;
 
-void triangle(Vec2i t0, Vec2i t1, Vec2i t2, SDL_Renderer *image, SDL_Color color)
+void triangle(const std::vector<Vec2i> &pts, SDL_Renderer *image, SDL_Color color)
 {
-    if (t0.v == t1.v && t0.v == t2.v)
+    Vec2i bboxmin{width - 1, height - 1};
+    Vec2i bboxmax{0, 0};
+    Vec2i clamp{width - 1, height - 1};
+    for (int i = 0; i < 3; i++)
     {
-        return;
+        bboxmin.u = std::max(0, std::min(bboxmin.u, pts[i].u));
+        bboxmin.v = std::max(0, std::min(bboxmin.v, pts[i].v));
+        bboxmax.u = std::min(clamp.u, std::max(bboxmax.u, pts[i].u));
+        bboxmax.v = std::min(clamp.v, std::max(bboxmax.v, pts[i].v));
     }
 
-    if (t0.v > t1.v)
-    {
-        std::swap(t0, t1);
-    }
-
-    if (t0.v > t2.v)
-    {
-        std::swap(t0, t2);
-    }
-
-    if (t1.v > t2.v)
-    {
-        std::swap(t1, t2);
-    }
-
-    int totalHeight = t2.v - t0.v;
+    Vec2i p;
     SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
-    for (int i = 0; i < totalHeight; i++)
+    for (p.u = bboxmin.u; p.u <= bboxmax.u; p.u++)
     {
-        bool secondHalf = i > t1.v - t0.v || t1.v == t0.v;
-        int segmentHeight = secondHalf ? t2.v - t1.v : t1.v - t0.v;
-        auto alpha = float(i) / float(totalHeight);
-        auto beta = float(i - (secondHalf ? t1.v - t0.v : 0)) / float(segmentHeight);
-        Vec2i a = t0 + ((t2 - t0) * alpha);
-        Vec2i b = secondHalf ? t1 + ((t2 - t1) * beta) : t0 + ((t1 - t0) * beta);
-        if (a.u > b.u)
+        for (p.v = bboxmin.v; p.v <= bboxmax.v; p.v++)
         {
-            std::swap(a, b);
-        }
+            Vec3f bcScreen  = p.barycentric(pts);
+            if (bcScreen.x < 0 || bcScreen.y < 0 || bcScreen.z < 0)
+            {
+                continue;
+            }
 
-        for (int j = a.u; j <= b.u; j++)
-        {
-            SDL_RenderDrawPoint(image, j, t0.v + i);
+            SDL_RenderDrawPoint(image, p.u, p.v);
         }
     }
 }
@@ -66,11 +50,7 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, SDL_Renderer *image, SDL_Color color
 int main()
 {
     SDL_Color color;
-    const SDL_Color white{255, 255, 255, 255};
-    std::unique_ptr<Model> model;
-    std::array<Vec2i, 3> t0 = {Vec2i(10, 70), Vec2i(50, 160), Vec2i(70, 80)};
-    std::array<Vec2i, 3> t1 = {Vec2i(180, 50), Vec2i(150, 1), Vec2i(70, 180)};
-    std::array<Vec2i, 3> t2 = {Vec2i(180, 150), Vec2i(120, 160), Vec2i(130, 180)};
+    std::vector<Vec2i> pts = {Vec2i(10, 10), Vec2i(100, 30), Vec2i(190, 160)};
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
@@ -85,17 +65,9 @@ int main()
     ImGui::StyleColorsDark();
     ImGui_ImplSDL2_InitForSDLRenderer(window, image);
     ImGui_ImplSDLRenderer2_Init(image);
-    std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1}, thirdColor{0, 1, 0, 1};
+    std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1};
     bool glass = false;
     float bias = 1e-4, index = 1.1;
-    std::filesystem::directory_iterator objDirectory{"obj/"};
-    std::vector<std::string> objFiles;
-    for (auto &file : objDirectory)
-    {
-        objFiles.push_back(file.path().filename().generic_string());
-    }
-
-    std::string filename;
     while (true)
     {
         if (SDL_PollEvent(&event))
@@ -171,25 +143,12 @@ int main()
 
         ImGui::End();
         ImGui::Begin("Rasterization!");
-        for (auto &file : objFiles)
-        {
-            if (ImGui::RadioButton(file.c_str(), filename == file))
-            {
-                filename = file;
-            }
-        }
-
-        ImGui::ColorPicker4("Third color", thirdColor.data());
         if (ImGui::Button("Render"))
         {
-            model = std::make_unique<Model>(("obj/" + filename).c_str());
-            green = {static_cast<Uint8>(thirdColor[0] * 255), static_cast<Uint8>(thirdColor[1] * 255), static_cast<Uint8>(thirdColor[2] * 255), static_cast<Uint8>(thirdColor[3] * 255)};
             SDL_SetRenderTarget(image, texture);
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
-            triangle(t0[0], t0[1], t0[2], image, red);
-            triangle(t1[0], t1[1], t1[2], image, white);
-            triangle(t2[0], t2[1], t2[2], image, green);
+            triangle(pts, image, {255, 0, 0, 255});
             SDL_SetRenderTarget(image, nullptr);
             SDL_RenderCopyEx(image, texture, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }

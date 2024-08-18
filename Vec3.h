@@ -14,6 +14,8 @@ public:
 
     Vec3(T x, T y, T z) : x(x), y(y), z(z) {}
 
+    Vec3<T> operator^(const Vec3<T> &v) const { return {(y * v.z) - (z * v.y), (z * v.x) - (x * v.z), (x * v.y) - (y * v.x)}; }
+
     [[nodiscard]] float norm() const { return std::sqrt((x * x) + (y * y) + (z * z)); }
 
     Vec3<T> operator*(float f) const { return {x * f, y * f, z * f}; }
