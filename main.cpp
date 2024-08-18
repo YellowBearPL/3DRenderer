@@ -30,11 +30,14 @@ void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color)
         std::swap(y0, y1);
     }
 
+    int dx = x1 - x0;
+    int dy = y1 - y0;
+    float derror = std::abs(float(dy) / float(dx));
+    float error = 0;
+    int y = y0;
+    SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
     for (int x = x0; x <= x1; x++)
     {
-        auto t = float(x - x0) / float(x1 - x0);
-        int y = int((y0 * (1. - t)) + (float(y1) * t));
-        SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
         if (steep)
         {
             SDL_RenderDrawPoint(image, y, x);
@@ -42,6 +45,13 @@ void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color)
         else
         {
             SDL_RenderDrawPoint(image, x, y);
+        }
+
+        error += derror;
+        if (error > .5)
+        {
+            y += (y1 > y0 ? 1 : -1);
+            error -= 1.;
         }
     }
 }
