@@ -32,8 +32,8 @@ void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color)
 
     int dx = x1 - x0;
     int dy = y1 - y0;
-    float derror = std::abs(float(dy) / float(dx));
-    float error = 0;
+    int derror2 = std::abs(dy) * 2;
+    int error2 = 0;
     int y = y0;
     SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
     for (int x = x0; x <= x1; x++)
@@ -47,11 +47,11 @@ void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color)
             SDL_RenderDrawPoint(image, x, y);
         }
 
-        error += derror;
-        if (error > .5)
+        error2 += derror2;
+        if (error2 > dx)
         {
             y += (y1 > y0 ? 1 : -1);
-            error -= 1.;
+            error2 -= dx * 2;
         }
     }
 }
