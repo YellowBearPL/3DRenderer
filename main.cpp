@@ -15,12 +15,15 @@ const float angle = float(tan(M_PI * 0.5 * fov / 180.));
 
 int main()
 {
+    const SDL_Color white{255, 255, 255, 255};
+    const SDL_Color red{255, 0, 0, 255};
     SDL_Color color;
     SDL_Event event;
     SDL_Renderer *renderer;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
     SDL_CreateWindowAndRenderer(imageWidth, imageHeight, 0, &window, &renderer);
+    SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, imageWidth, imageHeight);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
@@ -32,6 +35,7 @@ int main()
     std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1};
     bool glass = false;
     float bias = 1e-4, index = 1.1;
+    bool rasterizer = false;
     while (true)
     {
         if (SDL_PollEvent(&event))
@@ -103,6 +107,20 @@ int main()
                     SDL_RenderDrawPoint(renderer, i, j);
                 }
             }
+        }
+
+        ImGui::End();
+        ImGui::Begin("Rasterization!");
+        ImGui::Checkbox("Render", &rasterizer);
+        if (rasterizer)
+        {
+            SDL_SetRenderTarget(renderer, texture);
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+            SDL_RenderClear(renderer);
+            SDL_SetRenderDrawColor(renderer, red.r, red.g, red.b, red.a);
+            SDL_RenderDrawPoint(renderer, 52, 41);
+            SDL_SetRenderTarget(renderer, nullptr);
+            SDL_RenderCopyEx(renderer, texture, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }
 
         ImGui::End();
