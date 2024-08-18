@@ -21,6 +21,11 @@ SDL_Color green;
 
 void triangle(Vec2i t0, Vec2i t1, Vec2i t2, SDL_Renderer *image, SDL_Color color)
 {
+    if (t0.v == t1.v && t0.v == t2.v)
+    {
+        return;
+    }
+
     if (t0.v > t1.v)
     {
         std::swap(t0, t1);
@@ -38,13 +43,14 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, SDL_Renderer *image, SDL_Color color
 
     int totalHeight = t2.v - t0.v;
     SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
-    for (int y = t0.v; y <= t1.v; y++)
+    for (int i = 0; i < totalHeight; i++)
     {
-        int segmentHeight = t1.v - t0.v + 1;
-        float alpha = float(y - t0.v) / float(totalHeight);
-        float beta  = float(y - t0.v) / float(segmentHeight);
+        bool secondHalf = i > t1.v - t0.v || t1.v == t0.v;
+        int segmentHeight = secondHalf ? t2.v - t1.v : t1.v - t0.v;
+        auto alpha = float(i) / float(totalHeight);
+        auto beta = float(i - (secondHalf ? t1.v - t0.v : 0)) / float(segmentHeight);
         Vec2i a = t0 + ((t2 - t0) * alpha);
-        Vec2i b = t0 + ((t1 - t0) * beta);
+        Vec2i b = secondHalf ? t1 + ((t2 - t1) * beta) : t0 + ((t1 - t0) * beta);
         if (a.u > b.u)
         {
             std::swap(a, b);
@@ -52,25 +58,7 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, SDL_Renderer *image, SDL_Color color
 
         for (int j = a.u; j <= b.u; j++)
         {
-            SDL_RenderDrawPoint(image, j, y);
-        }
-    }
-
-    for (int y = t1.v; y <= t2.v; y++)
-    {
-        int segmentHeight = t2.v - t1.v + 1;
-        float alpha = float(y - t0.v) / float(totalHeight);
-        float beta  = float(y - t1.v) / float(segmentHeight);
-        Vec2i a = t0 + ((t2 - t0) * alpha);
-        Vec2i b = t1 + ((t2 - t1) * beta);
-        if (a.u > b.u)
-        {
-            std::swap(a, b);
-        }
-
-        for (int j = a.u; j <= b.u; j++)
-        {
-            SDL_RenderDrawPoint(image, j, y);
+            SDL_RenderDrawPoint(image, j, t0.v + i);
         }
     }
 }
