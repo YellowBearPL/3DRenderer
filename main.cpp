@@ -16,12 +16,27 @@ const float angle = float(tan(M_PI * 0.5 * fov / 180.));
 
 void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color)
 {
-    for (int x = x0; x <= x1; x++)
+    int dx = x1 - x0;
+    int dy = y1 - y0;
+    if (dx > dy)
     {
-        auto t = float(x - x0) / float(x1 - x0);
-        auto y = int((y0 * (1. - t)) + (float(y1) * t));
-        SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
-        SDL_RenderDrawPoint(image, x, y);
+        for (int x = x0; x <= x1; x++)
+        {
+            auto t = float(x - x0) / float(x1 - x0);
+            auto y = int((y0 * (1. - t)) + (float(y1) * t));
+            SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
+            SDL_RenderDrawPoint(image, x, y);
+        }
+    }
+    else
+    {
+        for (int y = y0; y <= y1; y++)
+        {
+            auto t = float(y - y0) / float(y1 - y0);
+            auto x = int((x0 * (1. - t)) + (float(x1) * t));
+            SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
+            SDL_RenderDrawPoint(image, x, y);
+        }
     }
 }
 
