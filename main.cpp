@@ -8,8 +8,9 @@
 #include <SDL2/SDL.h>
 #include <array>
 #include <cmath>
-#include <iostream>
+#include <filesystem>
 #include <memory>
+#include <random>
 
 const int width = 1920;
 const int height = 1080;
@@ -17,32 +18,46 @@ const float invWidth = 1 / float(width), invHeight = 1 / float(height);
 const float fov = 30, aspectratio = width / float(height);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
 
-void triangle(const std::vector<Vec2i> &pts, SDL_Renderer *image, SDL_Color color)
+void triangle(Vec2i t0, Vec2i t1, Vec2i t2, SDL_Renderer *image, SDL_Color color)
 {
-    Vec2i bboxmin{width - 1, height - 1};
-    Vec2i bboxmax{0, 0};
-    Vec2i clamp{width - 1, height - 1};
-    for (int i = 0; i < 3; i++)
+    if (t0.v == t1.v && t0.v == t2.v)
     {
-        bboxmin.u = std::max(0, std::min(bboxmin.u, pts[i].u));
-        bboxmin.v = std::max(0, std::min(bboxmin.v, pts[i].v));
-        bboxmax.u = std::min(clamp.u, std::max(bboxmax.u, pts[i].u));
-        bboxmax.v = std::min(clamp.v, std::max(bboxmax.v, pts[i].v));
+        return;
     }
 
-    Vec2i p;
-    SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
-    for (p.u = bboxmin.u; p.u <= bboxmax.u; p.u++)
+    if (t0.v > t1.v)
     {
-        for (p.v = bboxmin.v; p.v <= bboxmax.v; p.v++)
-        {
-            Vec3f bcScreen  = p.barycentric(pts);
-            if (bcScreen.x < 0 || bcScreen.y < 0 || bcScreen.z < 0)
-            {
-                continue;
-            }
+        std::swap(t0, t1);
+    }
 
-            SDL_RenderDrawPoint(image, p.u, p.v);
+    if (t0.v > t2.v)
+    {
+        std::swap(t0, t2);
+    }
+
+    if (t1.v > t2.v)
+    {
+        std::swap(t1, t2);
+    }
+
+    int totalHeight = t2.v - t0.v;
+    SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
+    for (int i = 0; i < totalHeight; i++)
+    {
+        bool secondHalf = i > t1.v - t0.v || t1.v == t0.v;
+        int segmentHeight = secondHalf ? t2.v - t1.v : t1.v - t0.v;
+        auto alpha = float(i) / float(totalHeight);
+        auto beta = float(i - (secondHalf ? t1.v - t0.v : 0)) / float(segmentHeight);
+        Vec2i a = t0 + ((t2 - t0) * alpha);
+        Vec2i b = secondHalf ? t1 + ((t2 - t1) * beta) : t0 + ((t1 - t0) * beta);
+        if (a.u > b.u)
+        {
+            std::swap(a, b);
+        }
+
+        for (int j = a.u; j <= b.u; j++)
+        {
+            SDL_RenderDrawPoint(image, j, t0.v + i);
         }
     }
 }
@@ -50,7 +65,8 @@ void triangle(const std::vector<Vec2i> &pts, SDL_Renderer *image, SDL_Color colo
 int main()
 {
     SDL_Color color;
-    std::vector<Vec2i> pts = {Vec2i(10, 10), Vec2i(100, 30), Vec2i(190, 160)};
+    std::unique_ptr<Model> model;
+    std::mt19937 mt{std::random_device()()};
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
@@ -68,6 +84,14 @@ int main()
     std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1};
     bool glass = false;
     float bias = 1e-4, index = 1.1;
+    std::filesystem::directory_iterator objDirectory{"obj/"};
+    std::vector<std::string> objFiles;
+    for (auto &file : objDirectory)
+    {
+        objFiles.push_back(file.path().filename().generic_string());
+    }
+
+    std::string filename;
     while (true)
     {
         if (SDL_PollEvent(&event))
@@ -143,12 +167,33 @@ int main()
 
         ImGui::End();
         ImGui::Begin("Rasterization!");
+        for (auto &file : objFiles)
+        {
+            if (ImGui::RadioButton(file.c_str(), filename == file))
+            {
+                filename = file;
+            }
+        }
+
         if (ImGui::Button("Render"))
         {
+            model = std::make_unique<Model>(("obj/" + filename).c_str());
             SDL_SetRenderTarget(image, texture);
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
-            triangle(pts, image, {255, 0, 0, 255});
+            for (int i = 0; i < model->nfaces(); i++)
+            {
+                std::vector<int> face = model->face(i);
+                Vec2i screen_coords[3];
+                for (int j = 0; j < 3; j++)
+                {
+                    Vec3f world_coords = model->vert(face[j]);
+                    screen_coords[j] = {int((world_coords.x + 4.) * width / 8.), int((world_coords.y + 4.) * height / 8.)};
+                }
+
+                triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, SDL_Color(mt() % 255, mt() % 255, mt() % 255, 255));
+            }
+
             SDL_SetRenderTarget(image, nullptr);
             SDL_RenderCopyEx(image, texture, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }
