@@ -8,7 +8,6 @@
 #include <SDL2/SDL.h>
 #include <array>
 #include <cmath>
-#include <filesystem>
 #include <memory>
 #include <random>
 
@@ -65,34 +64,27 @@ void triangle(Vec2i t0, Vec2i t1, Vec2i t2, SDL_Renderer *image, SDL_Color color
 int main()
 {
     SDL_Color color;
-    std::unique_ptr<Model> model;
-    std::mt19937 mt{std::random_device()()};
-    Vec3f lightDir{0,0,-1};
+    SDL_Color red;
+    SDL_Color green;
+    SDL_Color blue;
+    SDL_Color white;
     SDL_Event event;
-    SDL_Renderer *image;
+    SDL_Renderer *scene;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(width, height, 0, &window, &image);
-    SDL_Texture *texture = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, width, height);
+    SDL_CreateWindowAndRenderer(width, height, 0, &window, &scene);
+    SDL_Texture *texture = SDL_CreateTexture(scene, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, width, height);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
     ImGui::StyleColorsDark();
-    ImGui_ImplSDL2_InitForSDLRenderer(window, image);
-    ImGui_ImplSDLRenderer2_Init(image);
-    std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1};
+    ImGui_ImplSDL2_InitForSDLRenderer(window, scene);
+    ImGui_ImplSDLRenderer2_Init(scene);
+    std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1}, color0{1, 0, 0, 1}, color1{0, 1, 0, 1}, color2{0, 0, 1, 1}, color3{1, 1, 1, 1};
     bool glass = false;
     float bias = 1e-4, index = 1.1;
-    std::filesystem::directory_iterator objDirectory{"obj/"};
-    std::vector<std::string> objFiles;
-    for (auto &file : objDirectory)
-    {
-        objFiles.push_back(file.path().filename().generic_string());
-    }
-
-    std::string filename;
     while (true)
     {
         if (SDL_PollEvent(&event))
@@ -151,8 +143,8 @@ int main()
             Ray::bias = bias;
             Ray::lightPosition = {lp[0], lp[1], lp[2]};
             Ray::light.brightness = lp[3];
-            SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
-            SDL_RenderClear(image);
+            SDL_SetRenderDrawColor(scene, 0, 0, 0, 0);
+            SDL_RenderClear(scene);
             for (int j = 0; j < height; j++)
             {
                 for (int i = 0; i < width; i++)
@@ -160,60 +152,42 @@ int main()
                     Ray primRay;
                     primRay.computePrimRay(i, j);
                     color = primRay.trace(0);
-                    SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
-                    SDL_RenderDrawPoint(image, i, j);
+                    SDL_SetRenderDrawColor(scene, color.r, color.g, color.b, color.a);
+                    SDL_RenderDrawPoint(scene, i, j);
                 }
             }
         }
 
         ImGui::End();
         ImGui::Begin("Rasterization!");
-        for (auto &file : objFiles)
-        {
-            if (ImGui::RadioButton(file.c_str(), filename == file))
-            {
-                filename = file;
-            }
-        }
-
+        ImGui::ColorEdit4("Color 0", color0.data());
+        ImGui::ColorEdit4("Color 1", color1.data());
+        ImGui::ColorEdit4("Color 2", color2.data());
+        ImGui::ColorEdit4("Color 3", color3.data());
         if (ImGui::Button("Render"))
         {
-            model = std::make_unique<Model>(("obj/" + filename).c_str());
-            SDL_SetRenderTarget(image, texture);
-            SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
-            SDL_RenderClear(image);
-            for (int i = 0; i < model->nfaces(); i++)
-            {
-                std::vector<int> face = model->face(i);
-                Vec2i screenCoords[3];
-                Vec3f worldCoords[3];
-                for (int j = 0; j < 3; j++)
-                {
-                    Vec3f v = model->vert(face[j]);
-                    screenCoords[j] = {int((v.x + 1.) * width / 2.), int((v.y + 1.) * height / 2.)};
-                    worldCoords[j] = v;
-                }
-
-                Vec3f n = (worldCoords[2] - worldCoords[0]) ^ (worldCoords[1] - worldCoords[0]);
-                n.normalize();
-                float intensity = n * lightDir;
-                if (intensity > 0)
-                {
-                    triangle(screenCoords[0], screenCoords[1], screenCoords[2], image, SDL_Color(Uint8(intensity * 255), Uint8(intensity * 255), Uint8(intensity * 255), 255));
-                }
-            }
-
-            SDL_SetRenderTarget(image, nullptr);
-            SDL_RenderCopyEx(image, texture, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
+            red = {static_cast<Uint8>(color0[0] * 255), static_cast<Uint8>(color0[1] * 255), static_cast<Uint8>(color0[2] * 255), static_cast<Uint8>(color0[3] * 255)};
+            green = {static_cast<Uint8>(color1[0] * 255), static_cast<Uint8>(color1[1] * 255), static_cast<Uint8>(color1[2] * 255), static_cast<Uint8>(color1[3] * 255)};
+            blue = {static_cast<Uint8>(color2[0] * 255), static_cast<Uint8>(color2[1] * 255), static_cast<Uint8>(color2[2] * 255), static_cast<Uint8>(color2[3] * 255)};
+            white = {static_cast<Uint8>(color3[0] * 255), static_cast<Uint8>(color3[1] * 255), static_cast<Uint8>(color3[2] * 255), static_cast<Uint8>(color3[3] * 255)};
+            SDL_SetRenderTarget(scene, texture);
+            SDL_SetRenderDrawColor(scene, 0, 0, 0, 0);
+            SDL_RenderClear(scene);
+            Vec2i(20, 34).line({744, 400}, scene, red);
+            Vec2i(120, 434).line({444, 400}, scene, green);
+            Vec2i(330, 463).line({594, 200}, scene, blue);
+            Vec2i(10, 10).line({790, 10}, scene, white);
+            SDL_SetRenderTarget(scene, nullptr);
+            SDL_RenderCopyEx(scene, texture, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }
 
         ImGui::End();
         ImGui::Render();
-        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), image);
-        SDL_RenderPresent(image);
+        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), scene);
+        SDL_RenderPresent(scene);
     }
 
-    SDL_DestroyRenderer(image);
+    SDL_DestroyRenderer(scene);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
