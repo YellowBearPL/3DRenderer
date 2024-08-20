@@ -29,4 +29,5 @@ public:
 };
 
 using Vec2i = Vec2<int>;
+using Vec2f = Vec2<float>;
 #endif//INC_3DRENDERER_VEC2_H

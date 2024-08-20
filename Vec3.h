@@ -1,6 +1,10 @@
 #ifndef INC_3DRENDERER_VEC3_H
 #define INC_3DRENDERER_VEC3_H
+#include <array>
 #include <cmath>
+
+extern const int width;
+extern const int height;
 
 template<typename T>
 class Vec3
@@ -37,6 +41,12 @@ public:
     [[nodiscard]] T distance(const Vec3<T> &v) const { return sqrt((v - *this).length2()); }
 
     void fresnel(const Vec3<float> &direction, float &kr, float &kt) { float facingratio = -direction.dot(*this); kr = float(0.1 + (pow(1 - facingratio, 3) * .9)); kt = 1 - kr; }
+
+    Vec3<float> world2screen() { return Vec3<float>(int(((x + 4.) * width / 8.) + .5), int(((y + 4.) * height / 8.) + .5), z); }
+
+    Vec3<T> cross(Vec3<T> v2) { return {(y * v2.z) - (z * v2.y), (z * v2.x) - (x * v2.z), (x * v2.y) - (y * v2.x)}; }
+
+    Vec3<float> barycentric(Vec3<float> b, Vec3<float> c, Vec3<float> p) { std::array<Vec3<float>, 2> s; s[1].x = c.y - y; s[1].y = b.y - y; s[1].z = y - p.y; s[0].x = c.x - x; s[0].y = b.x - x; s[0].z = x - p.x; Vec3<float> u = s[0].cross(s[1]); if (std::abs(u.z) > 1e-2) { return {1.f - ((u.x + u.y) / u.z), u.y / u.z, u.x / u.z}; } return {-1, 1, 1}; }
 };
 
 using Vec3f = Vec3<float>;
