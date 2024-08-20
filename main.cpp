@@ -86,6 +86,8 @@ int main()
     SDL_Color red;
     SDL_Color green;
     SDL_Color blue;
+    std::vector<int> ybuffer(width, std::numeric_limits<int>::min());
+    std::array<int, width * height> zbuffer{};
     SDL_Event event;
     SDL_Renderer *render;
     SDL_Window *window;
@@ -189,7 +191,6 @@ int main()
             SDL_SetRenderTarget(render, texture);
             SDL_SetRenderDrawColor(render, 0, 0, 0, 0);
             SDL_RenderClear(render);
-            std::vector<int> ybuffer(width, std::numeric_limits<int>::min());
             rasterize({20, 34}, {744, 400}, render, red, ybuffer);
             rasterize({120, 434}, {444, 400}, render, green, ybuffer);
             rasterize({330, 463}, {594, 200}, render, blue, ybuffer);
