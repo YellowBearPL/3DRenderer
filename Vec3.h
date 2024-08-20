@@ -20,6 +20,8 @@ public:
 
     Vec3<T> operator*(float f) const { return {x * f, y * f, z * f}; }
 
+    T operator*(const Vec3<T> &v) const { return (x * v.x) + (y * v.y) + (z * v.z); }
+
     Vec3<T> &operator*=(float f) { *this = *this * f; return *this; }
 
     Vec3<T> &normalize(T l=1) { *this *= l / norm(); return *this; }

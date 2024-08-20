@@ -67,6 +67,7 @@ int main()
     SDL_Color color;
     std::unique_ptr<Model> model;
     std::mt19937 mt{std::random_device()()};
+    Vec3f lightDir{0,0,-1};
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
@@ -184,14 +185,22 @@ int main()
             for (int i = 0; i < model->nfaces(); i++)
             {
                 std::vector<int> face = model->face(i);
-                Vec2i screen_coords[3];
+                Vec2i screenCoords[3];
+                Vec3f worldCoords[3];
                 for (int j = 0; j < 3; j++)
                 {
-                    Vec3f world_coords = model->vert(face[j]);
-                    screen_coords[j] = {int((world_coords.x + 4.) * width / 8.), int((world_coords.y + 4.) * height / 8.)};
+                    Vec3f v = model->vert(face[j]);
+                    screenCoords[j] = {int((v.x + 1.) * width / 2.), int((v.y + 1.) * height / 2.)};
+                    worldCoords[j] = v;
                 }
 
-                triangle(screen_coords[0], screen_coords[1], screen_coords[2], image, SDL_Color(mt() % 255, mt() % 255, mt() % 255, 255));
+                Vec3f n = (worldCoords[2] - worldCoords[0]) ^ (worldCoords[1] - worldCoords[0]);
+                n.normalize();
+                float intensity = n * lightDir;
+                if (intensity > 0)
+                {
+                    triangle(screenCoords[0], screenCoords[1], screenCoords[2], image, SDL_Color(Uint8(intensity * 255), Uint8(intensity * 255), Uint8(intensity * 255), 255));
+                }
             }
 
             SDL_SetRenderTarget(image, nullptr);
