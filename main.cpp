@@ -17,6 +17,7 @@ const int height = 1080;
 const float invWidth = 1 / float(width), invHeight = 1 / float(height);
 const float fov = 30, aspectratio = width / float(height);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
+Matrix modelView;
 
 void triangle(std::vector<Vec3f> pts, std::vector<float> zbuffer, SDL_Renderer *image, SDL_Color color)
 {

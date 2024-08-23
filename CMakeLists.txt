@@ -32,6 +32,8 @@ add_executable(3DRenderer main.cpp
         Model.cpp
         Model.h
         Vec2.cpp
-        Vec2.h)
+        Vec2.h
+        Matrix.cpp
+        Matrix.h)
 
 target_link_libraries(3DRenderer SDL2)
