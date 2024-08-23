@@ -18,6 +18,7 @@ const float invWidth = 1 / float(width), invHeight = 1 / float(height);
 const float fov = 30, aspectratio = width / float(height);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
 Matrix modelView;
+const int depth = 255;
 
 void triangle(std::vector<Vec3f> pts, std::vector<float> zbuffer, SDL_Renderer *image, SDL_Color color)
 {
@@ -74,6 +75,18 @@ void rasterize(Vec2i p0, Vec2i p1, SDL_Renderer *image, SDL_Color color, std::ve
             SDL_RenderDrawPoint(image, x, 0);
         }
     }
+}
+
+Matrix viewport(int x, int y, int w, int h)
+{
+    Matrix m = Matrix::identity();
+    m[0][3] = float(x) + float(w) / 2.f;
+    m[1][3] = float(y) + float(h) / 2.f;
+    m[2][3] = depth / 2.f;
+    m[0][0] = float(w) / 2.f;
+    m[1][1] = float(h) / 2.f;
+    m[2][2] = depth / 2.f;
+    return m;
 }
 
 int main()
