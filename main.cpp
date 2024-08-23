@@ -94,7 +94,11 @@ int main()
     SDL_Color color;
     std::vector<float> zbuffer(width * height, -std::numeric_limits<float>::max());
     std::unique_ptr<Model> model;
-    Vec3f lightDir{0,0,-1};
+    Vec3f lightDir{0, 0, -1};
+    Vec3f eye;
+    Vec3f center;
+    Matrix projection;
+    Matrix viewPort;
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
@@ -120,6 +124,7 @@ int main()
     }
 
     std::string filename;
+    std::array<float, 3> ep{1, 1, 3}, cp{0, 1, 0};
     while (true)
     {
         if (SDL_PollEvent(&event))
@@ -203,9 +208,17 @@ int main()
             }
         }
 
+        ImGui::InputFloat3("Eye", ep.data());
+        ImGui::InputFloat3("Center", cp.data());
         if (ImGui::Button("Render"))
         {
             model = std::make_unique<Model>(("obj/" + filename).c_str());
+            eye = {ep[0], ep[1], ep[2]};
+            center = {cp[0], cp[1], cp[2]};
+            eye.lookat(center, {0, 1, 0});
+            projection = Matrix::identity();
+            viewPort = viewport(width / 8, height / 8, width * 3 / 4, height * 3 / 4);
+            projection[3][2] = -1.f / (eye - center).norm();
             SDL_SetRenderTarget(image, texture);
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
@@ -215,7 +228,8 @@ int main()
                 std::vector<Vec3f> screenCoords(3);
                 for (int j = 0; j < 3; j++)
                 {
-                    screenCoords[j] = model->vert(face[j]).world2screen();
+                    Vec3f v = model->vert(face[j]);
+                    screenCoords[j] = Vec3f(viewPort * projection * modelView * Matrix(v));
                 }
 
                 Vec3f n = (model->vert(face[2]) - model->vert(face[0])) ^ (model->vert(face[1]) - model->vert(face[0]));

@@ -20,6 +20,8 @@ public:
 
     Vec3(T x, T y, T z) : x(x), y(y), z(z) {}
 
+    explicit Vec3(Matrix m) : x(m[0][0] / m[3][0]), y(m[1][0] / m[3][0]), z(m[2][0] / m[3][0]) {}
+
     Vec3<T> operator^(const Vec3<T> &v) const { return {(y * v.z) - (z * v.y), (z * v.x) - (x * v.z), (x * v.y) - (y * v.x)}; }
 
     [[nodiscard]] float norm() const { return std::sqrt((x * x) + (y * y) + (z * z)); }
@@ -50,7 +52,7 @@ public:
 
     Vec3<float> barycentric(Vec3<float> b, Vec3<float> c, Vec3<float> p) { std::array<Vec3<float>, 2> s; s[1].x = c.y - y; s[1].y = b.y - y; s[1].z = y - p.y; s[0].x = c.x - x; s[0].y = b.x - x; s[0].z = x - p.x; Vec3<float> u = s[0].cross(s[1]); if (std::abs(u.z) > 1e-2) { return {1.f - ((u.x + u.y) / u.z), u.y / u.z, u.x / u.z}; } return {-1, 1, 1}; }
 
-    void lookat(Vec3<float> center, Vec3<float> up) { Vec3<float> vZ = (*this - center).normalize(); Vec3<float> vX = up.cross(z).normalize(); Vec3<float> vY = z.cross(x).normalize(); Matrix minv = Matrix::identity(); Matrix tr = Matrix::identity(); minv[0][0] = vX.x; minv[1][0] = vY.x; minv[2][0] = vZ.x; tr[0][3] = -x; minv[0][1] = vX.y; minv[1][1] = vY.y; minv[2][1] = vZ.y; tr[1][3] = -y; minv[0][2] = vX.z; minv[1][2] = vY.z; minv[2][2] = vZ.z; tr[2][3] = -z;  modelView = minv * tr; }
+    void lookat(Vec3<float> center, Vec3<float> up) { Vec3<float> vZ = (*this - center).normalize(); Vec3<float> vX = up.cross(vZ).normalize(); Vec3<float> vY = vZ.cross(vX).normalize(); Matrix minv = Matrix::identity(); Matrix tr = Matrix::identity(); minv[0][0] = vX.x; minv[1][0] = vY.x; minv[2][0] = vZ.x; tr[0][3] = -x; minv[0][1] = vX.y; minv[1][1] = vY.y; minv[2][1] = vZ.y; tr[1][3] = -y; minv[0][2] = vX.z; minv[1][2] = vY.z; minv[2][2] = vZ.z; tr[2][3] = -z;  modelView = minv * tr; }
 };
 
 using Vec3f = Vec3<float>;
