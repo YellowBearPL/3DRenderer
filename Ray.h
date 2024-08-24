@@ -3,13 +3,15 @@
 #include "Light.h"
 #include "Object.h"
 #include "SDL2/SDL.h"
-#include "Vec3.h"
+#include "Geometry.h"
 #include <memory>
 #include <vector>
 
 extern const float invWidth, invHeight;
 extern const float aspectratio;
 extern const float angle;
+
+SDL_Color operator*(const SDL_Color &color, const double &f);
 
 class Ray
 {

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 
-Model::Model(const char *filename) : verts(), faces()
+Model::Model(const char *filename) : verts(), faces(), norms()
 {
     std::ifstream in;
     in.open(filename, std::ifstream::in);
@@ -25,20 +25,46 @@ Model::Model(const char *filename) : verts(), faces()
             iss >> v.x >> v.y >> v.z;
             verts.push_back(v);
         }
+        else if (!line.compare(0, 3, "vn "))
+        {
+            iss >> trash >> trash;
+            Vec3f n;
+            iss >> n.x >> n.y >> n.z;
+            norms.push_back(n);
+        }
         else if (!line.compare(0, 2, "f "))
         {
-            std::vector<int> f;
-            int itrash, idx;
+            std::vector<Vec3i> f;
+            Vec3i tmp;
             iss >> trash;
-            while (iss >> idx >> trash >> itrash >> trash >> itrash)
+            while (iss >> tmp.x >> trash >> tmp.y >> trash >> tmp.z)
             {
-                idx--;
-                f.push_back(idx);
+                tmp.x--;
+                tmp.y--;
+                tmp.z--;
+                f.push_back(tmp);
             }
 
             faces.push_back(f);
         }
     }
 
-    std::cerr << "# v# " << verts.size() << " f# "  << faces.size() << std::endl;
+    std::cerr << "# v# " << verts.size() << " f# "  << faces.size() << " vn# " << norms.size() << std::endl;
+}
+
+std::vector<int> Model::face(int idx)
+{
+    std::vector<int> face;
+    for (auto &i : faces[idx])
+    {
+        face.push_back(i.x);
+    }
+
+    return face;
+}
+
+Vec3f Model::normal(int iface, int nthvert)
+{
+    int idx = faces[iface][nthvert].z;
+    return norms[idx].normalize();
 }

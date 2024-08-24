@@ -5,8 +5,6 @@ set(CMAKE_CXX_STANDARD 23)
 
 add_definitions(-DSDL_MAIN_HANDLED)
 add_executable(3DRenderer main.cpp
-        Vec3.cpp
-        Vec3.h
         Ray.cpp
         Ray.h
         Object.h
@@ -31,9 +29,9 @@ add_executable(3DRenderer main.cpp
         imgui/imgui_impl_sdlrenderer2.h
         Model.cpp
         Model.h
-        Vec2.cpp
-        Vec2.h
-        Matrix.cpp
-        Matrix.h)
+        Gl.cpp
+        Gl.h
+        Geometry.cpp
+        Geometry.h)
 
 target_link_libraries(3DRenderer SDL2)

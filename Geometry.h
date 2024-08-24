@@ -1,0 +1,138 @@
+#ifndef INC_3DRENDERER_GEOMETRY_H
+#define INC_3DRENDERER_GEOMETRY_H
+#include <SDL2/SDL.h>
+#include <algorithm>
+#include <vector>
+#include <array>
+#include <cmath>
+
+template<typename T>
+class Vec3;
+
+template<typename T>
+class Vec2
+{
+public:
+    T u, v;
+
+    Vec2() : u(0), v(0) {}
+
+    Vec2(T u, T v) : u(u), v(v) {}
+
+    Vec2<T> operator+(const Vec2<T> &v2) const { return {u + v2.u, v + v2.v}; }
+
+    Vec2<T> operator-(const Vec2<T> &v2) const { return {u - v2.u, v - v2.v}; }
+
+    Vec2<T> operator*(float f) const { return Vec2<T>(u * f, v * f); }
+
+    Vec2<float> proj2();
+
+    static void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color);
+
+    void line(Vec2<T> p1, SDL_Renderer *image, SDL_Color color) { line(u, v, p1.u, p1.v, image, color); }
+
+    Vec3<T> barycentric(Vec2<T> b, Vec2<T> c, Vec2<T> p);
+};
+
+using Vec2i = Vec2<int>;
+using Vec2f = Vec2<float>;
+
+template<typename T>
+class Vec4
+{
+    std::array<T, 4> data;
+
+public:
+    T &operator[](const size_t i) { return data[i]; }
+
+    const T &operator[](const size_t i) const { return data[i]; }
+
+    T operator*(const Vec4<T>& v);
+
+    Vec4<T> operator/(const T &rhs);
+
+    Vec2<T> proj2();
+};
+
+using Vec4f = Vec4<float>;
+
+template<typename T>
+class Mat44
+{
+    std::array<Vec4<T>, 4> rows;
+
+public:
+    explicit Mat44() = default;
+
+    static Mat44<T> identity();
+
+    Vec4<T> &operator[](const size_t idx) { return rows[idx]; }
+
+    [[nodiscard]] Vec4<T> col(size_t idx) const;
+
+    Vec4<T> operator*(const Vec4<T> &v);
+
+    Mat44<T> operator*(const Mat44<T> &m);
+};
+
+using Matrix = Mat44<float>;
+
+extern const int width;
+extern const int height;
+
+template<typename T>
+class Vec3
+{
+public:
+    T x, y, z;
+
+    Vec3() : x(0), y(0), z(0) {}
+
+    explicit Vec3(T xx) : x(xx), y(xx), z(xx) {}
+
+    Vec3(T x, T y, T z) : x(x), y(y), z(z) {}
+
+    explicit Vec3(Matrix m) : x(m[0][0] / m[3][0]), y(m[1][0] / m[3][0]), z(m[2][0] / m[3][0]) {}
+
+    Vec3<T> operator^(const Vec3<T> &v) const { return {(y * v.z) - (z * v.y), (z * v.x) - (x * v.z), (x * v.y) - (y * v.x)}; }
+
+    [[nodiscard]] T norm() const { return std::sqrt((x * x) + (y * y) + (z * z)); }
+
+    Vec3<T> operator*(T f) const { return {x * f, y * f, z * f}; }
+
+    T operator*(const Vec3<T> &v) const { return (x * v.x) + (y * v.y) + (z * v.z); }
+
+    Vec3<T> &operator*=(T f);
+
+    Vec3<T> &normalize(T l=1);
+
+    [[nodiscard]] T dot(const Vec3<T> &v) const { return (x * v.x) + (y * v.y) + (z * v.z); }
+
+    Vec3<T> operator-(const Vec3<T> &v) const { return {x - v.x, y - v.y, z - v.z}; }
+
+    Vec3<T> operator+(const Vec3<T> &v) const { return {x + v.x, y + v.y, z + v.z}; }
+
+    [[nodiscard]] T length2() const { return (x * x) + (y * y) + (z * z); }
+
+    [[nodiscard]] T distance(const Vec3<T> &v) const { return sqrt((v - *this).length2()); }
+
+    void fresnel(const Vec3<T> &direction, T &kr, T &kt);
+
+    Vec3<T> world2Screen() { return Vec3<T>(((x + 4.) * width / 8.) + .5, ((y + 4.) * height / 8.) + .5, z); }
+
+    Vec3<T> cross(Vec3<T> v2) { return {(y * v2.z) - (z * v2.y), (z * v2.x) - (x * v2.z), (x * v2.y) - (y * v2.x)}; }
+
+    Vec3<T> barycentric(Vec3<T> b, Vec3<T> c, Vec3<T> p);
+
+    void lookat(Vec3<T> center, Vec3<T> up);
+
+    T &operator[](const int i) { return i == 0 ? x : (i == 1 ? y : z); }
+
+    Vec4<T> embed4(T fill = 1);
+};
+
+using Vec3f = Vec3<float>;
+using Point = Vec3f;
+using Normal = Vec3f;
+using Vec3i = Vec3<int>;
+#endif//INC_3DRENDERER_GEOMETRY_H
