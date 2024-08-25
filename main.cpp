@@ -9,7 +9,6 @@
 #include <SDL2/SDL.h>
 #include <array>
 #include <cmath>
-#include <iostream>
 #include <memory>
 #include <random>
 #include <vector>
@@ -30,21 +29,23 @@ extern Matrix modelView;
 class SShader : public Shader
 {
 public:
-    Vec3f varyingIntensity;
     Mat23<float> varyingUv;
+    Mat44<float> uniformM{};
+    Mat44<float> uniformMIT{};
 
     Vec4f vertex(int iface, int nthvert) override
     {
         varyingUv.setCol(nthvert, model->uv(iface, nthvert));
-        varyingIntensity[nthvert] = std::max(0.f, model->normal(iface, nthvert) * lightDir);
         Vec4f glVertex = model->vert(iface, nthvert).embed4();
         return mViewport * mProjection * modelView * glVertex;
     }
 
     bool fragment(Vec3f bar, SDL_Color &color) override
     {
-        float intensity = varyingIntensity * bar;
         Vec2f uv = varyingUv * bar;
+        Vec3f n = (uniformMIT * model->normal(uv).embed4()).proj3().normalize();
+        Vec3f l = (uniformM * lightDir.embed4()).proj3().normalize();
+        float intensity = std::max(0.f, n * l);
         color = model->diffuse(uv) * intensity;
         return false;
     }
@@ -68,6 +69,8 @@ int main(int argc, char *argv[])
     lightDir.normalize();
     std::vector<std::vector<unsigned char>> zbuffer(width, std::vector<unsigned char>(height));
     SShader shader;
+    shader.uniformM = mProjection * modelView;
+    shader.uniformMIT = (mProjection * modelView).invertTranspose();
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;

@@ -32,6 +32,10 @@ public:
     void line(const Vec2<T> &p1, SDL_Renderer *image, SDL_Color color) { line(u, v, p1.u, p1.v, image, color); }
 
     Vec3<T> barycentric(const Vec2<T> &b, const Vec2<T> &c, const Vec2<T> &p);
+
+    T &operator[](const size_t i) { return i <= 0 ? u : v; }
+
+    const T &operator[](const size_t i) const { return i <= 0 ? u : v; }
 };
 
 using Vec2i = Vec2<int>;
@@ -49,12 +53,70 @@ public:
 
     T operator*(const Vec4<T>& v);
 
-    Vec4<T> operator/(const T &rhs);
+    Vec4<T> operator/(const T &t);
+
+    Vec4<T> &operator/=(const T &t);
 
     Vec2<T> proj2();
+
+    Vec3<T> proj3();
 };
 
 using Vec4f = Vec4<float>;
+
+template<typename T>
+class Mat33;
+
+template<typename T>
+class Dt3
+{
+public:
+    static T det(const Mat33<T> &src);
+};
+
+template<typename T>
+class Mat22;
+
+template<typename T>
+class Dt2
+{
+public:
+    static T det(const Mat22<T> &src);
+};
+
+template<typename T>
+class Mat22
+{
+    std::array<Vec2<T>, 2> rows;
+
+public:
+    Vec2<T> &operator[](const size_t idx) { return rows[idx]; }
+
+    const Vec2<T> &operator[](const size_t idx) const { return rows[idx]; }
+
+    T det() const { return Dt2<T>::det(*this); }
+
+    T getMinor(size_t row, size_t col) const;
+
+    [[nodiscard]] T cofactor(size_t row, size_t col) const { return getMinor(row, col) * ((row + col) % 2 ? -1 : 1); }
+};
+
+template<typename T>
+class Mat33
+{
+    std::array<Vec3<T>, 3> rows;
+
+public:
+    Vec3<T> &operator[](const size_t idx) { return rows[idx]; }
+
+    const Vec3<T> &operator[](const size_t idx) const { return rows[idx]; }
+
+    T det() const { return Dt3<T>::det(*this); }
+
+    Mat22<T> getMinor(size_t row, size_t col) const;
+
+    [[nodiscard]] T cofactor(size_t row, size_t col) const { return getMinor(row, col).det() * ((row + col) % 2 ? -1 : 1); }
+};
 
 template<typename T>
 class Mat44
@@ -75,6 +137,16 @@ public:
     Vec4<T> operator*(const Vec4<T> &v);
 
     Mat44<T> operator*(const Mat44<T> &m);
+
+    [[nodiscard]] Mat33<T> getMinor(size_t row, size_t col) const;
+
+    [[nodiscard]] T cofactor(size_t row, size_t col) const { return getMinor(row, col).det() * ((row + col) % 2 ? -1 : 1); }
+
+    [[nodiscard]] Mat44<T> adjugate() const;
+
+    Mat44<T> invertTranspose();
+
+    Mat44<T> operator/(const T &t);
 };
 
 using Matrix = Mat44<float>;
@@ -128,7 +200,9 @@ public:
 
     void lookat(const Vec3<T> &center, const Vec3<T> &up);
 
-    T &operator[](const int i) { return i == 0 ? x : (i == 1 ? y : z); }
+    T &operator[](const size_t i) { return i <= 0 ? x : (i <= 1 ? y : z); }
+
+    const T &operator[](const size_t i) const { return i <= 0 ? x : (1 == i ? y : z); }
 
     Vec4<T> embed4(T fill = 1);
 };

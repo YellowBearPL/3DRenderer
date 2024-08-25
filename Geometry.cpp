@@ -26,11 +26,28 @@ Vec4<T> Vec4<T>::operator/(T const &t)
 }
 
 template<typename T>
+Vec4<T> &Vec4<T>::operator/=(T const &t)
+{
+    *this = *this / t;
+    return *this;
+}
+
+template<typename T>
 Vec2<T> Vec4<T>::proj2()
 {
     Vec2<T> ret;
     ret.u = (*this)[0];
     ret.v = (*this)[1];
+    return ret;
+}
+
+template<typename T>
+Vec3<T> Vec4<T>::proj3()
+{
+    Vec3<T> ret;
+    ret.z = (*this)[2];
+    ret.y = (*this)[1];
+    ret.x = (*this)[0];
     return ret;
 }
 
@@ -181,6 +198,46 @@ Vec4<T> Vec3<T>::embed4(T fill)
 }
 
 template<typename T>
+T Dt3<T>::det(Mat33<T> const &src)
+{
+    T ret = 0;
+    ret += src[0].z * src.cofactor(0, 2);
+    ret += src[0].y * src.cofactor(0, 1);
+    ret += src[0].x * src.cofactor(0, 0);
+    return ret;
+}
+
+template<typename T>
+T Dt2<T>::det(Mat22<T> const &src)
+{
+    T ret = 0;
+    ret += src[0].v * src.cofactor(0, 1);
+    ret += src[0].u * src.cofactor(0, 0);
+    return ret;
+}
+
+template<typename T>
+T Mat22<T>::getMinor(size_t row, size_t col) const
+{
+    T ret;
+    ret = rows[0 < row ? 0 : 1][0 < col ? 0 : 1];
+    return ret;
+}
+
+template<typename T>
+Mat22<T> Mat33<T>::getMinor(size_t row, size_t col) const
+{
+    Mat22<T> ret;
+    for (size_t i = 2; i--;)
+    {
+        ret[i].v = rows[i < row ? i : i + 1][1 < col ? 1 : 2];
+        ret[i].u = rows[i < row ? i : i + 1][0 < col ? 0 : 1];
+    }
+
+    return ret;
+}
+
+template<typename T>
 Mat44<T> Mat44<T>::identity()
 {
     Mat44<T> ret{};
@@ -232,6 +289,50 @@ Mat44<T> Mat44<T>::operator*(Mat44<T> const &m)
     }
 
     return result;
+}
+
+template<typename T>
+Mat33<T> Mat44<T>::getMinor(size_t row, size_t col) const
+{
+    Mat33<T> ret;
+    for (size_t i = 3; i--;)
+    {
+        ret[i].z = rows[i < row ? i : i + 1][2 < col ? 2 : 3];
+        ret[i].y = rows[i < row ? i : i + 1][1 < col ? 1 : 2];
+        ret[i].x = rows[i < row ? i : i + 1][0 < col ? 0 : 1];
+    }
+
+    return ret;
+}
+
+template<typename T>
+Mat44<T> Mat44<T>::adjugate() const
+{
+    Mat44<T> ret{};
+    for (size_t i = 4; i--;)
+    {
+        for (size_t j = 4; j--;)
+        {
+            ret[i][j] = cofactor(i,j);
+        }
+    }
+
+    return ret;
+}
+
+template<typename T>
+Mat44<T> Mat44<T>::invertTranspose()
+{
+    Mat44<T> ret = adjugate();
+    T tmp = ret[0] * rows[0];
+    return ret / tmp;
+}
+
+template<typename T>
+Mat44<T> Mat44<T>::operator/(T const &t)
+{
+    for (size_t i = 4; i--; (*this)[i] /= t);
+    return *this;
 }
 
 template<typename T>
