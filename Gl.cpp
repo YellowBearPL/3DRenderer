@@ -35,7 +35,6 @@ void Shader::triangle(std::vector<Vec4f> pts, SDL_Renderer *image, std::vector<s
     }
 
     Vec2i p;
-    SDL_Color color;
     for (p.u = int(bboxmin.u); float(p.u) <= bboxmax.u; p.u++)
     {
         for (p.v = int(bboxmin.v); float(p.v) <= bboxmax.v; p.v++)
@@ -49,6 +48,7 @@ void Shader::triangle(std::vector<Vec4f> pts, SDL_Renderer *image, std::vector<s
                 continue;
             }
 
+            SDL_Color color;
             bool discard = fragment(c, color);
             if (!discard)
             {
