@@ -41,7 +41,32 @@ public:
     bool fragment(Vec3f bar, SDL_Color &color) override
     {
         float intensity = varyingIntensity * bar;
-        color = SDL_Color{255, 255, 255, 255} * intensity;
+        if (intensity > .85)
+        {
+            intensity = 1;
+        }
+        else if (intensity > .60)
+        {
+            intensity = .80;
+        }
+        else if (intensity > .45)
+        {
+            intensity = .60;
+        }
+        else if (intensity > .30)
+        {
+            intensity = .45;
+        }
+        else if (intensity > .15)
+        {
+            intensity = .30;
+        }
+        else
+        {
+            intensity = 0;
+        }
+
+        color = SDL_Color(255, 155, 0, 255) * intensity;
         return false;
     }
 };
