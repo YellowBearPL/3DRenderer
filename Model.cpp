@@ -4,7 +4,7 @@
 #include <sstream>
 #include <utility>
 
-Model::Model(const char *filename) : verts(), faces(), norms(), vUv(), diffusemap(), normalmap()
+Model::Model(const char *filename) : verts(), faces(), norms(), vUv(), diffusemap(), normalmap(), specularmap()
 {
     std::ifstream in;
     in.open(filename, std::ifstream::in);
@@ -60,6 +60,7 @@ Model::Model(const char *filename) : verts(), faces(), norms(), vUv(), diffusema
     std::cerr << "# v# " << verts.size() << " f# "  << faces.size() << " vt# " << vUv.size() << " vn# " << norms.size() << std::endl;
     loadTexture(filename, "_diffuse.bmp", diffusemap);
     loadTexture(filename, "_nm.bmp", normalmap);
+    loadTexture(filename, "_spec.bmp", specularmap);
 }
 
 std::vector<int> Model::face(int idx)
@@ -79,7 +80,7 @@ Vec3f Model::normal(int iface, int nthvert)
     return norms[idx].normalize();
 }
 
-Vec3f Model::normal(Vec2f uvf)
+Vec3f Model::normal(const Vec2f &uvf)
 {
     Vec2i uv(int(fmod(abs(uvf.u), 1) * normalmap->w), int(fmod(abs(uvf.v), 1) * normalmap->h));
     auto *p = (Uint8 *)normalmap->pixels + (uv.v * normalmap->pitch) + (uv.u * 3);
@@ -102,9 +103,16 @@ void Model::loadTexture(std::string filename, std::string suffix, SDL_Surface *&
     }
 }
 
-SDL_Color Model::diffuse(Vec2f uvf)
+SDL_Color Model::diffuse(const Vec2f &uvf)
 {
     Vec2i uv{static_cast<int>(fmod(abs(uvf.u), 1) * diffusemap->w), static_cast<int>(fmod(abs(uvf.v), 1) * diffusemap->h)};
     auto *p = (Uint8 *)diffusemap->pixels + (uv.v * diffusemap->pitch) + (uv.u * 3);
     return {p[2], p[1], p[0], 255};
+}
+
+float Model::specular(const Vec2f &uvf)
+{
+    Vec2i uv{static_cast<int>(fmod(abs(uvf.u), 1) * specularmap->w), static_cast<int>(fmod(abs(uvf.v), 1) * specularmap->h)};
+    auto *p = (Uint8 *)diffusemap->pixels + (uv.v * diffusemap->pitch) + (uv.u * 3);
+    return float(*p);
 }

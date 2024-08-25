@@ -13,6 +13,7 @@ private:
     std::vector<Vec2f> vUv;
     SDL_Surface *diffusemap;
     SDL_Surface *normalmap;
+    SDL_Surface *specularmap;
 
     static void loadTexture(std::string filename, std::string suffix, SDL_Surface *&img);
 
@@ -23,7 +24,7 @@ public:
 
     Vec3f normal(int iface, int nthvert);
 
-    Vec3f normal(Vec2f uvf);
+    Vec3f normal(const Vec2f &uvf);
 
     std::vector<int> face(int idx);
 
@@ -33,6 +34,8 @@ public:
 
     Vec2f uv(int iface, int nthvert) { return vUv[faces[iface][nthvert].y]; };
 
-    SDL_Color diffuse(Vec2f uvf);
+    SDL_Color diffuse(const Vec2f &uvf);
+
+    float specular(const Vec2f &uvf);
 };
 #endif//INC_3DRENDERER_MODEL_H

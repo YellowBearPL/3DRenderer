@@ -45,8 +45,14 @@ public:
         Vec2f uv = varyingUv * bar;
         Vec3f n = (uniformMIT * model->normal(uv).embed4()).proj3().normalize();
         Vec3f l = (uniformM * lightDir.embed4()).proj3().normalize();
-        float intensity = std::max(0.f, n * l);
-        color = model->diffuse(uv) * intensity;
+        Vec3f r = ((n * (n * l * 2.f)) - l).normalize();
+        auto spec = float(pow(std::max(r.z, 0.0f), model->specular(uv)));
+        float diff = std::max(0.f, n * l);
+        SDL_Color c = model->diffuse(uv);
+        color = c;
+        color.r = Uint8(std::min<float>(float(5 + (c.r * (diff + (.6 * spec)))), 255));
+        color.g = Uint8(std::min<float>(float(5 + (c.g * (diff + (.6 * spec)))), 255));
+        color.b = Uint8(std::min<float>(float(5 + (c.b * (diff + (.6 * spec)))), 255));
         return false;
     }
 };
