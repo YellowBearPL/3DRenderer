@@ -1,3 +1,5 @@
+#include "Geometry.h"
+#include "Gl.h"
 #include "Model.h"
 #include "Ray.h"
 #include "Sphere.h"
@@ -7,11 +9,10 @@
 #include <SDL2/SDL.h>
 #include <array>
 #include <cmath>
+#include <iostream>
 #include <memory>
 #include <random>
 #include <vector>
-#include "Geometry.h"
-#include "Gl.h"
 
 std::unique_ptr<Model> model = nullptr;
 const int width = 1920;
@@ -26,13 +27,15 @@ Vec3f up{0, 1, 0};
 
 extern Matrix modelView;
 
-class GouraudShader : public Shader
+class SShader : public Shader
 {
 public:
     Vec3f varyingIntensity;
+    Mat23<float> varyingUv;
 
     Vec4f vertex(int iface, int nthvert) override
     {
+        varyingUv.setCol(nthvert, model->uv(iface, nthvert));
         varyingIntensity[nthvert] = std::max(0.f, model->normal(iface, nthvert) * lightDir);
         Vec4f glVertex = model->vert(iface, nthvert).embed4();
         return mViewport * mProjection * modelView * glVertex;
@@ -41,32 +44,8 @@ public:
     bool fragment(Vec3f bar, SDL_Color &color) override
     {
         float intensity = varyingIntensity * bar;
-        if (intensity > .85)
-        {
-            intensity = 1;
-        }
-        else if (intensity > .60)
-        {
-            intensity = .80;
-        }
-        else if (intensity > .45)
-        {
-            intensity = .60;
-        }
-        else if (intensity > .30)
-        {
-            intensity = .45;
-        }
-        else if (intensity > .15)
-        {
-            intensity = .30;
-        }
-        else
-        {
-            intensity = 0;
-        }
-
-        color = SDL_Color(255, 155, 0, 255) * intensity;
+        Vec2f uv = varyingUv * bar;
+        color = model->diffuse(uv) * intensity;
         return false;
     }
 };
@@ -88,7 +67,7 @@ int main(int argc, char *argv[])
     projection(-1.f / (eye - center).norm());
     lightDir.normalize();
     std::vector<std::vector<unsigned char>> zbuffer(width, std::vector<unsigned char>(height));
-    GouraudShader shader;
+    SShader shader;
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;

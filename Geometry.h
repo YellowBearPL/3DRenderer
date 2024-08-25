@@ -29,9 +29,9 @@ public:
 
     static void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color);
 
-    void line(Vec2<T> p1, SDL_Renderer *image, SDL_Color color) { line(u, v, p1.u, p1.v, image, color); }
+    void line(const Vec2<T> &p1, SDL_Renderer *image, SDL_Color color) { line(u, v, p1.u, p1.v, image, color); }
 
-    Vec3<T> barycentric(Vec2<T> b, Vec2<T> c, Vec2<T> p);
+    Vec3<T> barycentric(const Vec2<T> &b, const Vec2<T> &c, const Vec2<T> &p);
 };
 
 using Vec2i = Vec2<int>;
@@ -68,6 +68,8 @@ public:
 
     Vec4<T> &operator[](const size_t idx) { return rows[idx]; }
 
+    const Vec4<T> &operator[](const size_t idx) const { return rows[idx]; }
+
     [[nodiscard]] Vec4<T> col(size_t idx) const;
 
     Vec4<T> operator*(const Vec4<T> &v);
@@ -92,7 +94,7 @@ public:
 
     Vec3(T x, T y, T z) : x(x), y(y), z(z) {}
 
-    explicit Vec3(Matrix m) : x(m[0][0] / m[3][0]), y(m[1][0] / m[3][0]), z(m[2][0] / m[3][0]) {}
+    explicit Vec3(const Matrix &m) : x(m[0][0] / m[3][0]), y(m[1][0] / m[3][0]), z(m[2][0] / m[3][0]) {}
 
     Vec3<T> operator^(const Vec3<T> &v) const { return {(y * v.z) - (z * v.y), (z * v.x) - (x * v.z), (x * v.y) - (y * v.x)}; }
 
@@ -120,11 +122,11 @@ public:
 
     Vec3<T> world2Screen() { return Vec3<T>(((x + 4.) * width / 8.) + .5, ((y + 4.) * height / 8.) + .5, z); }
 
-    Vec3<T> cross(Vec3<T> v2) { return {(y * v2.z) - (z * v2.y), (z * v2.x) - (x * v2.z), (x * v2.y) - (y * v2.x)}; }
+    Vec3<T> cross(const Vec3<T> &v2) const { return {(y * v2.z) - (z * v2.y), (z * v2.x) - (x * v2.z), (x * v2.y) - (y * v2.x)}; }
 
-    Vec3<T> barycentric(Vec3<T> b, Vec3<T> c, Vec3<T> p);
+    Vec3<T> barycentric(const Vec3<T> &b, const Vec3<T> &c, const Vec3<T> &p);
 
-    void lookat(Vec3<T> center, Vec3<T> up);
+    void lookat(const Vec3<T> &center, const Vec3<T> &up);
 
     T &operator[](const int i) { return i == 0 ? x : (i == 1 ? y : z); }
 
@@ -135,4 +137,17 @@ using Vec3f = Vec3<float>;
 using Point = Vec3f;
 using Normal = Vec3f;
 using Vec3i = Vec3<int>;
+
+template<typename T>
+class Mat23
+{
+    std::array<Vec3<T>, 2> rows;
+
+public:
+    Vec3<T> &operator[](const size_t idx) { return rows[idx]; }
+
+    void setCol(size_t idx, const Vec2<T> &v);
+
+    Vec2<T> operator*(const Vec3<T> &v);
+};
 #endif//INC_3DRENDERER_GEOMETRY_H

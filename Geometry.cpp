@@ -87,7 +87,7 @@ void Vec2<T>::line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Colo
 }
 
 template<typename T>
-Vec3<T> Vec2<T>::barycentric(Vec2<T> b, Vec2<T> c, Vec2<T> p)
+Vec3<T> Vec2<T>::barycentric(const Vec2<T> &b, const Vec2<T> &c, const Vec2<T> &p)
 {
     std::array<Vec3f, 2> s;
     s[1].x = c.v - v;
@@ -128,7 +128,7 @@ void Vec3<T>::fresnel(Vec3<T> const &direction, T &kr, T &kt)
 }
 
 template<typename T>
-Vec3<T> Vec3<T>::barycentric(Vec3<T> b, Vec3<T> c, Vec3<T> p)
+Vec3<T> Vec3<T>::barycentric(const Vec3<T> &b, const Vec3<T> &c, const Vec3<T> &p)
 {
     std::array<Vec3<float>, 2> s;
     s[1].x = c.y - y;
@@ -147,7 +147,7 @@ Vec3<T> Vec3<T>::barycentric(Vec3<T> b, Vec3<T> c, Vec3<T> p)
 }
 
 template<typename T>
-void Vec3<T>::lookat(Vec3<T> center, Vec3<T> up)
+void Vec3<T>::lookat(const Vec3<T> &center, const Vec3<T> &up)
 {
     Vec3<float> vZ = (*this - center).normalize();
     Vec3<float> vX = up.cross(vZ).normalize();
@@ -234,8 +234,25 @@ Mat44<T> Mat44<T>::operator*(Mat44<T> const &m)
     return result;
 }
 
+template<typename T>
+void Mat23<T>::setCol(size_t idx, Vec2<T> const &v)
+{
+    rows[1][idx] = v.v;
+    rows[0][idx] = v.u;
+}
+
+template<typename T>
+Vec2<T> Mat23<T>::operator*(Vec3<T> const &v)
+{
+    Vec2<T> ret;
+    ret.v = (*this)[1] * v;
+    ret.u = (*this)[0] * v;
+    return ret;
+}
+
 template class Vec3<float>;
 template class Mat44<float>;
 template class Vec4<float>;
 template class Vec2<int>;
 template class Vec2<float>;
+template class Mat23<float>;
