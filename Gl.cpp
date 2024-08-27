@@ -51,7 +51,7 @@ void Shader::triangle(std::vector<Vec4f> pts, SDL_Renderer *image, std::vector<f
             }
 
             SDL_Color color;
-            bool discard = fragment(c, color);
+            bool discard = fragment({static_cast<float>(p.u), static_cast<float>(p.v), static_cast<float>(fragDepth)}, c, color);
             if (!discard)
             {
                 zbuffer[(p.v * width) + p.u] = float(fragDepth);

@@ -23,7 +23,6 @@ Vec3f lightDir{1, 1, 1};
 Vec3f eye{1, 1, 3};
 Vec3f center{0, 0, 0};
 Vec3f up{0, 1, 0};
-std::vector<float> shadowbuffer;
 
 extern Matrix modelView;
 
@@ -46,46 +45,9 @@ public:
         return glVertex;
     }
 
-    bool fragment(Vec3f bar, SDL_Color &color) override
+    bool fragment(Vec3f glFragCoord, Vec3f bar, SDL_Color &color) override
     {
-        Vec4f sbP = uniformMshadow * (varyingTri * bar).embed4();
-        sbP = sbP / sbP[3];
-        int idx = int(sbP[0]) + int(sbP[1]) * width;
-        auto shadow = float(.3 + (.7 * (shadowbuffer[abs(idx)] < sbP[2] + 43.34)));
-        Vec2f uv = varyingUv * bar;
-        Vec3f n = (uniformMIT * model->normal(uv).embed4()).proj3().normalize();
-        Vec3f l = (uniformM * lightDir.embed4()).proj3().normalize();
-        Vec3f r = ((n * (n * l * 2.f)) - l).normalize();
-        auto spec = float(pow(std::max(r.z, 0.0f), model->specular(uv)));
-        float diff = std::max(0.f, n * l);
-        SDL_Color c = model->diffuse(uv);
-        color.r = Uint8(std::min<float>(float(20 + (float(c.r) * shadow * ((1.2 * diff) + (.6 * spec)))), 255));
-        color.g = Uint8(std::min<float>(float(20 + (float(c.g) * shadow * ((1.2 * diff) + (.6 * spec)))), 255));
-        color.b = Uint8(std::min<float>(float(20 + (float(c.b) * shadow * ((1.2 * diff) + (.6 * spec)))), 255));
-        color.a = 255;
-        return false;
-    }
-};
-
-struct DepthShader : public Shader
-{
-public:
-    Mat33<float> varyingTri;
-
-    DepthShader() : varyingTri() {}
-
-    Vec4f vertex(int iface, int nthvert) override
-    {
-        Vec4f glVertex = model->vert(iface, nthvert).embed4();
-        glVertex = mViewport * mProjection * modelView * glVertex;
-        varyingTri.setCol(nthvert, (glVertex / glVertex[3]).proj3());
-        return glVertex;
-    }
-
-    bool fragment(Vec3f bar, SDL_Color &color) override
-    {
-        Vec3f p = varyingTri * bar;
-        color = SDL_Color(255, 255, 255, 255) * (p.z / depth);
+        color = SDL_Color(255, 255, 255, 255) * ((glFragCoord.z + 1.f) / 2.f);
         return false;
     }
 };
@@ -102,22 +64,23 @@ int main(int argc, char *argv[])
         model = std::make_unique<Model>("obj/teapot.obj");
     }
 
+    eye.lookat(center, up);
     viewport(width / 8, height / 8, width * 3 / 4, height * 3 / 4);
-    DepthShader depthshader;
+    projection(-1.f / (eye - center).norm());
     std::vector<Vec4f> screenCoords(3);
     std::vector<float> zbuffer(width * height);
-    shadowbuffer.resize(width * height);
     for (int i = width * height; --i;)
     {
-        zbuffer[i] = shadowbuffer[i] = -std::numeric_limits<float>::max();
+        zbuffer[i] = -std::numeric_limits<float>::max();
     }
 
+    Matrix m = mViewport * mProjection * modelView;
+    SShader shader(modelView, (mProjection * modelView).invertTranspose(), m * (mViewport * mProjection * modelView).invert());
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
     SDL_CreateWindowAndRenderer(width, height, 0, &window, &image);
-    SDL_Texture *depth = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, width, height);
     SDL_Texture *frame = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, width, height);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -208,28 +171,9 @@ int main(int argc, char *argv[])
         ImGui::InputFloat("Depth", &Shader::depth);
         if (ImGui::Button("Render"))
         {
-            SDL_SetRenderTarget(image, depth);
-            SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
-            SDL_RenderClear(image);
-            lightDir.lookat(center, up);
-            projection(0);
-            for (int i = 0; i < model->nfaces(); i++)
-            {
-                for (int j = 0; j < 3; j++)
-                {
-                    screenCoords[j] = depthshader.vertex(i, j);
-                }
-
-                depthshader.triangle(screenCoords, image, shadowbuffer);
-            }
-
-            Matrix m = mViewport * mProjection * modelView;
             SDL_SetRenderTarget(image, frame);
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
-            eye.lookat(center, up);
-            projection(-1.f / (eye - center).norm());
-            SShader shader(modelView, (mProjection * modelView).invertTranspose(), m * (mViewport * mProjection * modelView).invert());
             for (int i = 0; i < model->nfaces(); i++)
             {
                 for (int j = 0; j < 3; j++)
