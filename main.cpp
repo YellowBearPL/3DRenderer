@@ -51,7 +51,7 @@ public:
         Vec4f sbP = uniformMshadow * (varyingTri * bar).embed4();
         sbP = sbP / sbP[3];
         int idx = int(sbP[0]) + int(sbP[1]) * width;
-        auto shadow = float(.3 + (.7 * (shadowbuffer[abs(idx)] < sbP[2])));
+        auto shadow = float(.3 + (.7 * (shadowbuffer[abs(idx)] < sbP[2] + 43.34)));
         Vec2f uv = varyingUv * bar;
         Vec3f n = (uniformMIT * model->normal(uv).embed4()).proj3().normalize();
         Vec3f l = (uniformM * lightDir.embed4()).proj3().normalize();
