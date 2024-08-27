@@ -36,6 +36,10 @@ public:
     T &operator[](const size_t i) { return i <= 0 ? u : v; }
 
     const T &operator[](const size_t i) const { return i <= 0 ? u : v; }
+
+    T maxElevationAngle(std::vector<T> zbuffer, Vec2<T> dir);
+
+    float norm() { return std::sqrt((u * u) + (v * v)); }
 };
 
 using Vec2i = Vec2<int>;
@@ -135,6 +139,30 @@ public:
 };
 
 template<typename T>
+class Mat34
+{
+    std::array<Vec4<T>, 3> rows;
+
+public:
+    Vec4<T> &operator[](const size_t idx) { return rows[idx]; }
+};
+
+template<typename T>
+class Mat43
+{
+    std::array<Vec3<T>, 4> rows;
+
+public:
+    void setCol(size_t idx, const Vec4<T> &v) { for (size_t i = 4; i--; rows[i][idx] = v[i]); }
+
+    Vec3<T> &operator[] (const size_t idx) { return rows[idx]; }
+
+    Vec4<T> col(size_t idx) const;
+
+    Mat34<T> transpose();
+};
+
+template<typename T>
 class Mat44
 {
     std::array<Vec4<T>, 4> rows;
@@ -167,6 +195,8 @@ public:
     Mat44<T> invert() { return invertTranspose().transpose(); }
 
     Mat44<T> transpose();
+
+    Mat43<T> operator*(const Mat43<T> &m);
 };
 
 using Matrix = Mat44<float>;
@@ -250,11 +280,11 @@ public:
 };
 
 template<typename T>
-class Mat43
+class Mat32
 {
-    std::array<Vec3<T>, 4> rows;
+    std::array<Vec2<T>, 3> rows;
 
 public:
-    void setCol(size_t idx, const Vec4<T> &v) { for (size_t i = 4; i--; rows[i][idx] = v[i]); }
+    Vec2<T> &operator[](const size_t idx) { return rows[idx]; }
 };
 #endif//INC_3DRENDERER_GEOMETRY_H

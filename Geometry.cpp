@@ -123,6 +123,31 @@ Vec3<T> Vec2<T>::barycentric(const Vec2<T> &b, const Vec2<T> &c, const Vec2<T> &
 }
 
 template<typename T>
+T Vec2<T>::maxElevationAngle(std::vector<T> zbuffer, Vec2<T> dir)
+{
+    float maxangle = 0;
+    for (int t = 0; t < 1000; t += 1)
+    {
+        Vec2<T> cur = *this + (dir * t);
+        if (cur.u >= float(width) || cur.v >= float(height) || cur.u < 0 || cur.v < 0)
+        {
+            return maxangle;
+        }
+
+        float distance = (*this - cur).norm();
+        if (distance < 1.f)
+        {
+            continue;
+        }
+
+        float elevation = zbuffer[int(cur.u) + (int(cur.v) * width)] - zbuffer[int(u) + int(v) * width];
+        maxangle = std::max(maxangle, atanf(elevation / distance));
+    }
+
+    return maxangle;
+}
+
+template<typename T>
 Vec3<T> &Vec3<T>::operator*=(T f)
 {
     *this = *this * f;
@@ -425,6 +450,29 @@ Mat44<T> Mat44<T>::transpose()
 }
 
 template<typename T>
+Mat43<T> Mat44<T>::operator*(Mat43<T> const &m)
+{
+    Mat43<T> result;
+    for (size_t i = 4; i--;)
+    {
+        for (size_t j = 3; j--;)
+        {
+            result[i][j] = (*this)[i] * m.col(j);
+        }
+    }
+
+    return result;
+}
+
+template<typename T>
+Mat34<T> Mat43<T>::transpose()
+{
+    Mat34<T> ret{};
+    for (size_t i = 3; i--; ret[i] = col(i));
+    return ret;
+}
+
+template<typename T>
 void Mat23<T>::setCol(size_t idx, Vec2<T> const &v)
 {
     rows[1][idx] = v.v;
@@ -440,6 +488,18 @@ Vec2<T> Mat23<T>::operator*(Vec3<T> const &v)
     return ret;
 }
 
+template<typename T>
+Vec4<T> Mat43<T>::col(size_t const idx) const
+{
+    Vec4<T> ret{};
+    for (size_t i = 4; i--;)
+    {
+        ret[i] = rows[i][idx];
+    }
+
+    return ret;
+}
+
 template class Vec3<float>;
 template class Mat44<float>;
 template class Vec4<float>;
@@ -447,3 +507,4 @@ template class Vec2<int>;
 template class Vec2<float>;
 template class Mat23<float>;
 template class Mat33<float>;
+template class Mat43<float>;

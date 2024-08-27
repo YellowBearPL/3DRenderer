@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
         zbuffer[i] = -std::numeric_limits<float>::max();
     }
 
-    ZShader shader;
+    ZShader zshader;
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
@@ -170,10 +170,32 @@ int main(int argc, char *argv[])
             {
                 for (int j = 0; j < 3; j++)
                 {
-                    screenCoords[j] = shader.vertex(i, j);
+                    zshader.vertex(i, j);
                 }
 
-                shader.triangle(screenCoords, image, zbuffer);
+                zshader.triangle(zshader.varyingTri, image, zbuffer);
+            }
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    if (zbuffer[x + (y * width)] < -1e5)
+                    {
+                        continue;
+                    }
+
+                    float total = 0;
+                    for (float a = 0; a < (M_PI * 2) - 1e-4; a += M_PI / 4)
+                    {
+                        total += float(M_PI / 2) - Vec2f(float(x), float(y)).maxElevationAngle(zbuffer, Vec2f(std::cos(a), std::sin(a)));
+                    }
+
+                    total /= (M_PI / 2) * 8;
+                    total = std::pow(total, 100.f);
+                    SDL_SetRenderDrawColor(image, Uint8(total * 255), Uint8(total * 255), Uint8(total * 255), 255);
+                    SDL_RenderDrawPoint(image, x, y);
+                }
             }
 
             SDL_SetRenderTarget(image, nullptr);

@@ -24,37 +24,45 @@ void projection(float coeff)
 
 float Shader::depth = 2000.f;
 
-void Shader::triangle(std::vector<Vec4f> pts, SDL_Renderer *image, std::vector<float> &zbuffer)
+void Shader::triangle(Mat43<float> &clipc, SDL_Renderer *image, std::vector<float> &zbuffer)
 {
-    Vec2f bboxmin{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
-    Vec2f bboxmax{-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max()};
+    Mat34<float> pts  = (mViewport * clipc).transpose();
+    Mat32<float> pts2;
     for (int i = 0; i < 3; i++)
     {
-        bboxmin.u = std::min(bboxmin.u, pts[i][0] / pts[i][3]);
-        bboxmax.u = std::max(bboxmax.u, pts[i][0] / pts[i][3]);
-        bboxmin.v = std::min(bboxmin.v, pts[i][1] / pts[i][3]);
-        bboxmax.v = std::max(bboxmax.v, pts[i][1] / pts[i][3]);
+        pts2[i] = (pts[i] / pts[i][3]).proj2();
+    }
+
+    Vec2f bboxmin{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+    Vec2f bboxmax{-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max()};
+    Vec2f clamp{static_cast<float>(width - 1), static_cast<float>(height - 1)};
+    for (int i = 0; i < 3; i++)
+    {
+        bboxmin.u = std::max(0.f, std::min(bboxmin.u, pts2[i].u));
+        bboxmax.u = std::min(clamp.u, std::max(bboxmax.u, pts2[i].u));
+        bboxmin.v = std::max(0.f, std::min(bboxmin.v, pts2[i].v));
+        bboxmax.v = std::min(clamp.v, std::max(bboxmax.v, pts2[i].v));
     }
 
     Vec2i p;
-    for (p.u = int(bboxmin.u); p.u < width && float(p.u) <= bboxmax.u; p.u++)
+    SDL_Color color;
+    for (p.u = int(bboxmin.u); float(p.u) <= bboxmax.u; p.u++)
     {
-        for (p.v = int(bboxmin.v); p.v < height && float(p.v) <= bboxmax.v; p.v++)
+        for (p.v = int(bboxmin.v); float(p.v) <= bboxmax.v; p.v++)
         {
-            Vec3f c = (pts[0] / pts[0][3]).proj2().barycentric((pts[1] / pts[1][3]).proj2(), (pts[2] / pts[2][3]).proj2(), p.proj2());
-            float z = (pts[0][2] * c.x) + (pts[1][2] * c.y) + (pts[2][2] * c.z);
-            float w = (pts[0][3] * c.x) + (pts[1][3] * c.y) + (pts[2][3] * c.z);
-            int fragDepth = std::max(long(0), std::min(long(255), std::lround(z / w)));
-            if (c.x < 0 || c.y < 0 || c.z < 0 || zbuffer[(p.v * width) + p.u] > float(fragDepth))
+            Vec3f bcScreen = pts2[0].barycentric(pts2[1], pts2[2], {static_cast<float>(p.u), static_cast<float>(p.v)});
+            Vec3f bcClip{bcScreen.x / pts[0][3], bcScreen.y / pts[1][3], bcScreen.z / pts[2][3]};
+            bcClip /= bcClip.x + bcClip.y + bcClip.z;
+            float fragDepth = clipc[2] * bcClip;
+            if (bcScreen.x < 0 || bcScreen.y < 0 || bcScreen.z < 0 || zbuffer[p.u + (p.v * width)] > fragDepth)
             {
                 continue;
             }
 
-            SDL_Color color;
-            bool discard = fragment({static_cast<float>(p.u), static_cast<float>(p.v), static_cast<float>(fragDepth)}, c, color);
+            bool discard = fragment({static_cast<float>(p.u), static_cast<float>(p.v), fragDepth}, bcClip, color);
             if (!discard)
             {
-                zbuffer[(p.v * width) + p.u] = float(fragDepth);
+                zbuffer[p.u + (p.v * width)] = fragDepth;
                 SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
                 SDL_RenderDrawPoint(image, p.u, p.v);
             }
