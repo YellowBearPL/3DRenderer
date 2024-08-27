@@ -60,6 +60,29 @@ public:
     }
 };
 
+struct DepthShader : public Shader
+{
+public:
+    Mat33<float> varyingTri;
+
+    DepthShader() : varyingTri() {}
+
+    Vec4f vertex(int iface, int nthvert) override
+    {
+        Vec4f glVertex = model->vert(iface, nthvert).embed4();
+        glVertex = mViewport * mProjection * modelView * glVertex;
+        varyingTri.setCol(nthvert, (glVertex / glVertex[3]).proj3());
+        return glVertex;
+    }
+
+    bool fragment(Vec3f bar, SDL_Color &color) override
+    {
+        Vec3f p = varyingTri * bar;
+        color = SDL_Color(255, 255, 255, 255) * (p.z / depth);
+        return false;
+    }
+};
+
 int main(int argc, char *argv[])
 {
     SDL_Color color;

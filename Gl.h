@@ -13,6 +13,8 @@ void projection(float coeff = 0.f);
 class Shader
 {
 public:
+    static float depth;
+
     virtual ~Shader() = default;
 
     virtual Vec4f vertex(int iface, int nthvert) = 0;

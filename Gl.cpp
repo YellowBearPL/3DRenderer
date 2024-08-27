@@ -22,6 +22,8 @@ void projection(float coeff)
     mProjection[3][2] = coeff;
 }
 
+float Shader::depth = 2000.f;
+
 void Shader::triangle(std::vector<Vec4f> pts, SDL_Renderer *image, std::vector<std::vector<unsigned char>> &zbuffer)
 {
     Vec2f bboxmin{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
