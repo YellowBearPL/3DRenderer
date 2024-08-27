@@ -51,7 +51,7 @@ public:
         Vec4f sbP = uniformMshadow * (varyingTri * bar).embed4();
         sbP = sbP / sbP[3];
         int idx = int(sbP[0]) + int(sbP[1]) * width;
-        auto shadow = float(.3 + (.7 * (shadowbuffer[idx] < sbP[2])));
+        auto shadow = float(.3 + (.7 * (shadowbuffer[abs(idx)] < sbP[2])));
         Vec2f uv = varyingUv * bar;
         Vec3f n = (uniformMIT * model->normal(uv).embed4()).proj3().normalize();
         Vec3f l = (uniformM * lightDir.embed4()).proj3().normalize();
@@ -102,9 +102,7 @@ int main(int argc, char *argv[])
         model = std::make_unique<Model>("obj/teapot.obj");
     }
 
-    lightDir.lookat(center, up);
     viewport(width / 8, height / 8, width * 3 / 4, height * 3 / 4);
-    projection(0);
     DepthShader depthshader;
     std::vector<Vec4f> screenCoords(3);
     std::vector<float> zbuffer(width * height);
@@ -114,14 +112,13 @@ int main(int argc, char *argv[])
         zbuffer[i] = shadowbuffer[i] = -std::numeric_limits<float>::max();
     }
 
-    Matrix m = mViewport * mProjection * modelView;
-    SShader shader(modelView, (mProjection * modelView).invertTranspose(), m * (mViewport * mProjection * modelView).invert());
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
     SDL_CreateWindowAndRenderer(width, height, 0, &window, &image);
     SDL_Texture *depth = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, width, height);
+    SDL_Texture *frame = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, width, height);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
@@ -214,6 +211,8 @@ int main(int argc, char *argv[])
             SDL_SetRenderTarget(image, depth);
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
+            lightDir.lookat(center, up);
+            projection(0);
             for (int i = 0; i < model->nfaces(); i++)
             {
                 for (int j = 0; j < 3; j++)
@@ -224,8 +223,25 @@ int main(int argc, char *argv[])
                 depthshader.triangle(screenCoords, image, shadowbuffer);
             }
 
+            Matrix m = mViewport * mProjection * modelView;
+            SDL_SetRenderTarget(image, frame);
+            SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
+            SDL_RenderClear(image);
+            eye.lookat(center, up);
+            projection(-1.f / (eye - center).norm());
+            SShader shader(modelView, (mProjection * modelView).invertTranspose(), m * (mViewport * mProjection * modelView).invert());
+            for (int i = 0; i < model->nfaces(); i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    screenCoords[j] = shader.vertex(i, j);
+                }
+
+                shader.triangle(screenCoords, image, zbuffer);
+            }
+
             SDL_SetRenderTarget(image, nullptr);
-            SDL_RenderCopyEx(image, depth, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
+            SDL_RenderCopyEx(image, frame, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }
 
         ImGui::End();
