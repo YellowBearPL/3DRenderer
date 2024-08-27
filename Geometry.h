@@ -120,6 +120,8 @@ public:
     void setCol(size_t idx, Vec3<T> v);
 
     Vec3<T> operator*(const Vec3<T> &v);
+
+    Vec3<T> col(size_t idx) const;
 };
 
 template<typename T>

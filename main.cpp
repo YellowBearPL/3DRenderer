@@ -32,6 +32,7 @@ class SShader : public Shader
 public:
     Mat23<float> varyingUv;
     Mat33<float> varyingNrm;
+    Mat33<float> ndcTri;
 
     Vec4f vertex(int iface, int nthvert) override
     {
@@ -45,6 +46,10 @@ public:
     bool fragment(Vec3f bar, SDL_Color &color) override
     {
         Vec3f bn = (varyingNrm * bar).normalize();
+        Mat33<float> a;
+        a[0] = ndcTri.col(1) - ndcTri.col(0);
+        a[1] = ndcTri.col(2) - ndcTri.col(0);
+        a[2] = bn;
         Vec2f uv = varyingUv * bar;
         float diff = std::max(0.f, bn * lightDir);
         color = model->diffuse(uv) * diff;

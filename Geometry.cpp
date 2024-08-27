@@ -256,6 +256,16 @@ Vec3<T> Mat33<T>::operator*(Vec3<T> const &v)
 }
 
 template<typename T>
+Vec3<T> Mat33<T>::col(size_t const idx) const
+{
+    Vec3<T> ret;
+    ret.z = rows[2][idx];
+    ret.y = rows[1][idx];
+    ret.x = rows[0][idx];
+    return ret;
+}
+
+template<typename T>
 Mat44<T> Mat44<T>::identity()
 {
     Mat44<T> ret{};
