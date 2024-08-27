@@ -21,6 +21,6 @@ public:
 
     virtual bool fragment(Vec3f bar, SDL_Color &color) = 0;
 
-    void triangle(std::vector<Vec4f> pts, SDL_Renderer *image, std::vector<std::vector<unsigned char>> &zbuffer);
+    void triangle(std::vector<Vec4f> pts, SDL_Renderer *image, std::vector<float> &zbuffer);
 };
 #endif//INC_3DRENDERER_GL_H

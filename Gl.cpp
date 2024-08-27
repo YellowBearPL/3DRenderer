@@ -24,7 +24,7 @@ void projection(float coeff)
 
 float Shader::depth = 2000.f;
 
-void Shader::triangle(std::vector<Vec4f> pts, SDL_Renderer *image, std::vector<std::vector<unsigned char>> &zbuffer)
+void Shader::triangle(std::vector<Vec4f> pts, SDL_Renderer *image, std::vector<float> &zbuffer)
 {
     Vec2f bboxmin{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
     Vec2f bboxmax{-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max()};
@@ -37,15 +37,15 @@ void Shader::triangle(std::vector<Vec4f> pts, SDL_Renderer *image, std::vector<s
     }
 
     Vec2i p;
-    for (p.u = int(bboxmin.u); float(p.u) <= bboxmax.u; p.u++)
+    for (p.u = int(bboxmin.u); p.u < width && float(p.u) <= bboxmax.u; p.u++)
     {
-        for (p.v = int(bboxmin.v); float(p.v) <= bboxmax.v; p.v++)
+        for (p.v = int(bboxmin.v); p.v < height && float(p.v) <= bboxmax.v; p.v++)
         {
             Vec3f c = (pts[0] / pts[0][3]).proj2().barycentric((pts[1] / pts[1][3]).proj2(), (pts[2] / pts[2][3]).proj2(), p.proj2());
             float z = (pts[0][2] * c.x) + (pts[1][2] * c.y) + (pts[2][2] * c.z);
             float w = (pts[0][3] * c.x) + (pts[1][3] * c.y) + (pts[2][3] * c.z);
             int fragDepth = std::max(long(0), std::min(long(255), std::lround(z / w)));
-            if (c.x < 0 || c.y < 0 || c.z < 0 || zbuffer[p.u][p.v] > fragDepth)
+            if (c.x < 0 || c.y < 0 || c.z < 0 || zbuffer[(p.v * width) + p.u] > float(fragDepth))
             {
                 continue;
             }
@@ -54,7 +54,7 @@ void Shader::triangle(std::vector<Vec4f> pts, SDL_Renderer *image, std::vector<s
             bool discard = fragment(c, color);
             if (!discard)
             {
-                zbuffer[p.u][p.v] = fragDepth;
+                zbuffer[(p.v * width) + p.u] = float(fragDepth);
                 SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
                 SDL_RenderDrawPoint(image, p.u, p.v);
             }

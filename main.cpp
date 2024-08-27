@@ -95,18 +95,26 @@ int main(int argc, char *argv[])
         model = std::make_unique<Model>("obj/teapot.obj");
     }
 
-    eye.lookat(center, up);
+    lightDir.lookat(center, up);
     viewport(width / 8, height / 8, width * 3 / 4, height * 3 / 4);
-    projection(-1.f / (eye - center).norm());
-    lightDir.normalize();
-    std::vector<std::vector<unsigned char>> zbuffer(width, std::vector<unsigned char>(height));
+    projection(0);
+    DepthShader depthshader;
+    std::vector<Vec4f> screenCoords(3);
+    std::vector<float> zbuffer(width * height);
+    std::vector<float> shadowbuffer(width * height);
+    for (int i = width * height; --i;)
+    {
+        zbuffer[i] = shadowbuffer[i] = -std::numeric_limits<float>::max();
+    }
+
+    Matrix m = mViewport * mProjection * modelView;
     SShader shader;
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
     SDL_CreateWindowAndRenderer(width, height, 0, &window, &image);
-    SDL_Texture *texture = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, width, height);
+    SDL_Texture *depth = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, width, height);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
@@ -193,24 +201,24 @@ int main(int argc, char *argv[])
 
         ImGui::End();
         ImGui::Begin("Rasterization!");
+        ImGui::InputFloat("Depth", &Shader::depth);
         if (ImGui::Button("Render"))
         {
-            SDL_SetRenderTarget(image, texture);
+            SDL_SetRenderTarget(image, depth);
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
             for (int i = 0; i < model->nfaces(); i++)
             {
-                std::vector<Vec4f> screenCoords(3);
                 for (int j = 0; j < 3; j++)
                 {
-                    screenCoords[j] = shader.vertex(i, j);
+                    screenCoords[j] = depthshader.vertex(i, j);
                 }
 
-                shader.triangle(screenCoords, image, zbuffer);
+                depthshader.triangle(screenCoords, image, shadowbuffer);
             }
 
             SDL_SetRenderTarget(image, nullptr);
-            SDL_RenderCopyEx(image, texture, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
+            SDL_RenderCopyEx(image, depth, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }
 
         ImGui::End();
