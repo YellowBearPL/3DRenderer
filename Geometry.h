@@ -122,6 +122,16 @@ public:
     Vec3<T> operator*(const Vec3<T> &v);
 
     Vec3<T> col(size_t idx) const;
+
+    Mat33<T> adjugate() const;
+
+    Mat33<T> operator/(const T &t);
+
+    Mat33<T> transpose();
+
+    Mat33<T> invertTranspose();
+
+    Mat33<T> invert() { return invertTranspose().transpose(); }
 };
 
 template<typename T>
@@ -211,6 +221,10 @@ public:
     const T &operator[](const size_t i) const { return i <= 0 ? x : (1 == i ? y : z); }
 
     Vec4<T> embed4(T fill = 1);
+
+    Vec3<T> operator/(const T &t);
+
+    Vec3<T> &operator/=(const T &t);
 };
 
 using Vec3f = Vec3<float>;

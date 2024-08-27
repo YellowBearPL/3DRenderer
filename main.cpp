@@ -50,6 +50,9 @@ public:
         a[0] = ndcTri.col(1) - ndcTri.col(0);
         a[1] = ndcTri.col(2) - ndcTri.col(0);
         a[2] = bn;
+        Mat33<float> ai = a.invert();
+        Vec3f i = ai * Vec3f(varyingUv[0].y - varyingUv[0].x, varyingUv[0].z - varyingUv[0].x, 0);
+        Vec3f j = ai * Vec3f(varyingUv[1].y - varyingUv[1].x, varyingUv[1].z - varyingUv[1].x, 0);
         Vec2f uv = varyingUv * bar;
         float diff = std::max(0.f, bn * lightDir);
         color = model->diffuse(uv) * diff;

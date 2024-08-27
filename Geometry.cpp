@@ -198,6 +198,22 @@ Vec4<T> Vec3<T>::embed4(T fill)
 }
 
 template<typename T>
+Vec3<T> Vec3<T>::operator/(T const &t)
+{
+    z /= t;
+    y /= t;
+    x /= t;
+    return *this;
+}
+
+template<typename T>
+Vec3<T> &Vec3<T>::operator/=(T const &t)
+{
+    *this = *this / t;
+    return *this;
+}
+
+template<typename T>
 T Dt3<T>::det(Mat33<T> const &src)
 {
     T ret = 0;
@@ -263,6 +279,43 @@ Vec3<T> Mat33<T>::col(size_t const idx) const
     ret.y = rows[1][idx];
     ret.x = rows[0][idx];
     return ret;
+}
+
+template<typename T>
+Mat33<T> Mat33<T>::adjugate() const
+{
+    Mat33<T> ret;
+    for (size_t i = 3; i--; )
+    {
+        ret[i].z = cofactor(i, 2);
+        ret[i].y = cofactor(i, 1);
+        ret[i].x = cofactor(i, 0);
+    }
+
+    return ret;
+}
+
+template<typename T>
+Mat33<T> Mat33<T>::operator/(T const &t)
+{
+    for (size_t i = 3; i--; (*this)[i] /= t);
+    return *this;
+}
+
+template<typename T>
+Mat33<T> Mat33<T>::transpose()
+{
+    Mat33<T> ret;
+    for (size_t i = 3; i--; ret[i] = this->col(i));
+    return ret;
+}
+
+template<typename T>
+Mat33<T> Mat33<T>::invertTranspose()
+{
+    Mat33<T> ret = adjugate();
+    T tmp = ret[0] * rows[0];
+    return ret / tmp;
 }
 
 template<typename T>
