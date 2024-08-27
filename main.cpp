@@ -23,39 +23,46 @@ Vec3f lightDir{1, 1, 1};
 Vec3f eye{1, 1, 3};
 Vec3f center{0, 0, 0};
 Vec3f up{0, 1, 0};
-Mat43<float> varyingTri;
+std::vector<float> shadowbuffer;
 
 extern Matrix modelView;
 
 class SShader : public Shader
 {
 public:
+    Mat44<float> uniformM;
+    Mat44<float> uniformMIT;
+    Mat44<float> uniformMshadow;
     Mat23<float> varyingUv;
-    Mat33<float> varyingNrm;
-    Mat33<float> ndcTri;
+    Mat33<float> varyingTri;
+
+    SShader(Matrix m, Matrix mit, Matrix ms) : uniformM(m), uniformMIT(mit), uniformMshadow(ms), varyingUv(), varyingTri() {}
 
     Vec4f vertex(int iface, int nthvert) override
     {
         varyingUv.setCol(nthvert, model->uv(iface, nthvert));
-        varyingNrm.setCol(nthvert, ((mProjection * modelView).invertTranspose() * model->normal(iface, nthvert).embed4(0.f)).proj3());
-        Vec4f glVertex = mProjection * modelView * model->vert(iface, nthvert).embed4();
-        varyingTri.setCol(nthvert, glVertex);
+        Vec4f glVertex = mViewport * mProjection * modelView * model->vert(iface, nthvert).embed4();
+        varyingTri.setCol(nthvert, (glVertex / glVertex[3]).proj3());
         return glVertex;
     }
 
     bool fragment(Vec3f bar, SDL_Color &color) override
     {
-        Vec3f bn = (varyingNrm * bar).normalize();
-        Mat33<float> a;
-        a[0] = ndcTri.col(1) - ndcTri.col(0);
-        a[1] = ndcTri.col(2) - ndcTri.col(0);
-        a[2] = bn;
-        Mat33<float> ai = a.invert();
-        Vec3f i = ai * Vec3f(varyingUv[0].y - varyingUv[0].x, varyingUv[0].z - varyingUv[0].x, 0);
-        Vec3f j = ai * Vec3f(varyingUv[1].y - varyingUv[1].x, varyingUv[1].z - varyingUv[1].x, 0);
+        Vec4f sbP = uniformMshadow * (varyingTri * bar).embed4();
+        sbP = sbP / sbP[3];
+        int idx = int(sbP[0]) + int(sbP[1]) * width;
+        auto shadow = float(.3 + (.7 * (shadowbuffer[idx] < sbP[2])));
         Vec2f uv = varyingUv * bar;
-        float diff = std::max(0.f, bn * lightDir);
-        color = model->diffuse(uv) * diff;
+        Vec3f n = (uniformMIT * model->normal(uv).embed4()).proj3().normalize();
+        Vec3f l = (uniformM * lightDir.embed4()).proj3().normalize();
+        Vec3f r = ((n * (n * l * 2.f)) - l).normalize();
+        auto spec = float(pow(std::max(r.z, 0.0f), model->specular(uv)));
+        float diff = std::max(0.f, n * l);
+        SDL_Color c = model->diffuse(uv);
+        color.r = Uint8(std::min<float>(float(20 + (float(c.r) * shadow * ((1.2 * diff) + (.6 * spec)))), 255));
+        color.g = Uint8(std::min<float>(float(20 + (float(c.g) * shadow * ((1.2 * diff) + (.6 * spec)))), 255));
+        color.b = Uint8(std::min<float>(float(20 + (float(c.b) * shadow * ((1.2 * diff) + (.6 * spec)))), 255));
+        color.a = 255;
         return false;
     }
 };
@@ -101,14 +108,14 @@ int main(int argc, char *argv[])
     DepthShader depthshader;
     std::vector<Vec4f> screenCoords(3);
     std::vector<float> zbuffer(width * height);
-    std::vector<float> shadowbuffer(width * height);
+    shadowbuffer.resize(width * height);
     for (int i = width * height; --i;)
     {
         zbuffer[i] = shadowbuffer[i] = -std::numeric_limits<float>::max();
     }
 
     Matrix m = mViewport * mProjection * modelView;
-    SShader shader;
+    SShader shader(modelView, (mProjection * modelView).invertTranspose(), m * (mViewport * mProjection * modelView).invert());
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;

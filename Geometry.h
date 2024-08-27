@@ -163,6 +163,10 @@ public:
     Mat44<T> invertTranspose();
 
     Mat44<T> operator/(const T &t);
+
+    Mat44<T> invert() { return invertTranspose().transpose(); }
+
+    Mat44<T> transpose();
 };
 
 using Matrix = Mat44<float>;

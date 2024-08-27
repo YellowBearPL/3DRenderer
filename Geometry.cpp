@@ -306,7 +306,7 @@ template<typename T>
 Mat33<T> Mat33<T>::transpose()
 {
     Mat33<T> ret;
-    for (size_t i = 3; i--; ret[i] = this->col(i));
+    for (size_t i = 3; i--; ret[i] = col(i));
     return ret;
 }
 
@@ -414,6 +414,14 @@ Mat44<T> Mat44<T>::operator/(T const &t)
 {
     for (size_t i = 4; i--; (*this)[i] /= t);
     return *this;
+}
+
+template<typename T>
+Mat44<T> Mat44<T>::transpose()
+{
+    Mat44<T> ret{};
+    for (size_t i = 4; i--; ret[i] = col(i));
+    return ret;
 }
 
 template<typename T>
