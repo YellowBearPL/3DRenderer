@@ -36,6 +36,7 @@ public:
     Mat44<float> uniformMshadow;
     Mat23<float> varyingUv;
     Mat33<float> varyingTri;
+    std::vector<std::vector<unsigned char>> aoimage;
 
     SShader(Matrix m, Matrix mit, Matrix ms) : uniformM(m), uniformMIT(mit), uniformMshadow(ms), varyingUv(), varyingTri() {}
 
@@ -50,12 +51,8 @@ public:
     bool fragment(Vec3f glFragCoord, Vec3f bar, SDL_Color &color) override
     {
         Vec2f uv = varyingUv * bar;
-        if (std::abs(shadowbuffer[int(glFragCoord.x + (glFragCoord.y * width))] - glFragCoord.z) < 1e-2)
-        {
-            occl[fmod(abs(uv.u), 1) * 1024][fmod(abs(uv.v), 1) * 1024] = 255;
-        }
-
-        color = SDL_Color(255, 0, 0, 255);
+        int t = aoimage[fmod(abs(uv.u), 1) * 1024][fmod(abs(uv.v), 1) * 1024];
+        color = SDL_Color(t, t, t, 255);
         return false;
     }
 };
@@ -222,6 +219,7 @@ int main(int argc, char *argv[])
             eye.lookat(center, up);
             projection(-1.f / (eye - center).norm());
             SShader shader(modelView, (mProjection * modelView).invertTranspose(), m * (mViewport * mProjection * modelView).invert());
+            shader.aoimage = occl;
             for (int i = 0; i < model->nfaces(); i++)
             {
                 for (int j = 0; j < 3; j++)
