@@ -23,6 +23,7 @@ Vec3f lightDir{1, 1, 1};
 Vec3f eye{1, 1, 3};
 Vec3f center{0, 0, 0};
 Vec3f up{0, 1, 0};
+Mat43<float> varyingTri;
 
 extern Matrix modelView;
 
@@ -30,29 +31,23 @@ class SShader : public Shader
 {
 public:
     Mat23<float> varyingUv;
-    Mat44<float> uniformM{};
-    Mat44<float> uniformMIT{};
+    Mat33<float> varyingNrm;
 
     Vec4f vertex(int iface, int nthvert) override
     {
         varyingUv.setCol(nthvert, model->uv(iface, nthvert));
-        Vec4f glVertex = model->vert(iface, nthvert).embed4();
-        return mViewport * mProjection * modelView * glVertex;
+        varyingNrm.setCol(nthvert, ((mProjection * modelView).invertTranspose() * model->normal(iface, nthvert).embed4(0.f)).proj3());
+        Vec4f glVertex = mProjection * modelView * model->vert(iface, nthvert).embed4();
+        varyingTri.setCol(nthvert, glVertex);
+        return glVertex;
     }
 
     bool fragment(Vec3f bar, SDL_Color &color) override
     {
+        Vec3f bn = (varyingNrm * bar).normalize();
         Vec2f uv = varyingUv * bar;
-        Vec3f n = (uniformMIT * model->normal(uv).embed4()).proj3().normalize();
-        Vec3f l = (uniformM * lightDir.embed4()).proj3().normalize();
-        Vec3f r = ((n * (n * l * 2.f)) - l).normalize();
-        auto spec = float(pow(std::max(r.z, 0.0f), model->specular(uv)));
-        float diff = std::max(0.f, n * l);
-        SDL_Color c = model->diffuse(uv);
-        color = c;
-        color.r = Uint8(std::min<float>(float(5 + (c.r * (diff + (.6 * spec)))), 255));
-        color.g = Uint8(std::min<float>(float(5 + (c.g * (diff + (.6 * spec)))), 255));
-        color.b = Uint8(std::min<float>(float(5 + (c.b * (diff + (.6 * spec)))), 255));
+        float diff = std::max(0.f, bn * lightDir);
+        color = model->diffuse(uv) * diff;
         return false;
     }
 };
@@ -75,8 +70,6 @@ int main(int argc, char *argv[])
     lightDir.normalize();
     std::vector<std::vector<unsigned char>> zbuffer(width, std::vector<unsigned char>(height));
     SShader shader;
-    shader.uniformM = mProjection * modelView;
-    shader.uniformMIT = (mProjection * modelView).invertTranspose();
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;

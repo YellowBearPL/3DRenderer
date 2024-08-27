@@ -238,6 +238,24 @@ Mat22<T> Mat33<T>::getMinor(size_t row, size_t col) const
 }
 
 template<typename T>
+void Mat33<T>::setCol(size_t idx, Vec3<T> v)
+{
+    rows[2][idx] = v.z;
+    rows[1][idx] = v.y;
+    rows[0][idx] = v.x;
+}
+
+template<typename T>
+Vec3<T> Mat33<T>::operator*(Vec3<T> const &v)
+{
+    Vec3<T> ret;
+    ret.z = (*this)[2] * v;
+    ret.y = (*this)[1] * v;
+    ret.z = (*this)[0] * v;
+    return ret;
+}
+
+template<typename T>
 Mat44<T> Mat44<T>::identity()
 {
     Mat44<T> ret{};
@@ -357,3 +375,4 @@ template class Vec4<float>;
 template class Vec2<int>;
 template class Vec2<float>;
 template class Mat23<float>;
+template class Mat33<float>;

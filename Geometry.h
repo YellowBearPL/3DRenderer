@@ -116,6 +116,10 @@ public:
     Mat22<T> getMinor(size_t row, size_t col) const;
 
     [[nodiscard]] T cofactor(size_t row, size_t col) const { return getMinor(row, col).det() * ((row + col) % 2 ? -1 : 1); }
+
+    void setCol(size_t idx, Vec3<T> v);
+
+    Vec3<T> operator*(const Vec3<T> &v);
 };
 
 template<typename T>
@@ -223,5 +227,14 @@ public:
     void setCol(size_t idx, const Vec2<T> &v);
 
     Vec2<T> operator*(const Vec3<T> &v);
+};
+
+template<typename T>
+class Mat43
+{
+    std::array<Vec3<T>, 4> rows;
+
+public:
+    void setCol(size_t idx, const Vec4<T> &v) { for (size_t i = 4; i--; rows[i][idx] = v[i]); }
 };
 #endif//INC_3DRENDERER_GEOMETRY_H
