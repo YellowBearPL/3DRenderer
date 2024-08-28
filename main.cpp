@@ -299,6 +299,15 @@ int main(int argc, char *argv[])
                         hit = 1;
                     }
                 }
+
+                if (side == 0)
+                {
+                    perpWallDist = (sideDistX - deltaDistX);
+                }
+                else
+                {
+                    perpWallDist = (sideDistY - deltaDistY);
+                }
             }
         }
 
