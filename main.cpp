@@ -363,36 +363,43 @@ int main(int argc, char *argv[])
                     drawEnd = screenHeight - 1;
                 }
 
-                switch (worldMap[mapX][mapY])
+                int texNum = worldMap[mapX][mapY] - 1;
+                double wallX;
+                if (side == 0)
                 {
-                    case 1:
-                        color = {255, 0, 0, 255};
-                        break;
-
-                    case 2:
-                        color = {0, 255, 0, 255};
-                        break;
-
-                    case 3:
-                        color = {0, 0, 255, 255};
-                        break;
-
-                    case 4:
-                        color = {255, 255, 255, 255};
-                        break;
-
-                    default:
-                        color = {255, 255, 0, 255};
-                        break;
+                    wallX = posY + (perpWallDist * rayDirY);
+                }
+                else
+                {
+                    wallX = posX + (perpWallDist * rayDirX);
                 }
 
-                if (side == 1)
+                wallX -= floor((wallX));
+                auto texX = int(wallX * double(TEX_WIDTH));
+                if (side == 0 && rayDirX > 0)
                 {
-                    color /= 2;
+                    texX = TEX_WIDTH - texX - 1;
                 }
 
-                SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
-                SDL_RenderDrawLine(image, x, drawStart, x, drawEnd);
+                if (side == 1 && rayDirY < 0)
+                {
+                    texX = TEX_WIDTH - texX - 1;
+                }
+
+                double step = 1.0 * TEX_HEIGHT / lineHeight;
+                double texPos = (drawStart - (screenHeight / 2.) + (lineHeight / 2.)) * step;
+                for (int y = drawStart; y < drawEnd; y++)
+                {
+                    auto texY = int(texPos) & (TEX_HEIGHT - 1);
+                    texPos += step;
+                    Uint32 uColor = texture[texNum][(TEX_HEIGHT * texY) + texX];
+                    if (side == 1)
+                    {
+                        uColor = (uColor >> 1) & 8355711;
+                    }
+
+                    buffer[(screenHeight * y) + x] = uColor;
+                }
             }
 
             oldTime = time;
