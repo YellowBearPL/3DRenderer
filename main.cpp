@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
     SDL_CreateWindowAndRenderer(screenWidth, screenHeight, 0, &window, &image);
-    SDL_SetWindowTitle(window, "3D Renderer!")
+    SDL_SetWindowTitle(window, "3D Renderer!");
     SDL_Texture *frame = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, screenWidth, screenHeight);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
     ImGui_ImplSDL2_InitForSDLRenderer(window, image);
     ImGui_ImplSDLRenderer2_Init(image);
     std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1};
-    bool glass = false;
+    bool glass = false, raycast = false;
     float bias = 1e-4, index = 1.1;
     while (true)
     {
@@ -234,6 +234,19 @@ int main(int argc, char *argv[])
 
             SDL_SetRenderTarget(image, nullptr);
             SDL_RenderCopyEx(image, frame, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
+        }
+
+        ImGui::End();
+        ImGui::Begin("Ray Casting!");
+        ImGui::Checkbox("Render", &raycast);
+        if (raycast)
+        {
+            for (int x = 0; x < screenWidth; x++)
+            {
+                double cameraX = (2 * x / double(screenWidth)) - 1;
+                double rayDirX = dirX + planeX * cameraX;
+                double rayDirY = dirY + planeY * cameraX;
+            }
         }
 
         ImGui::End();
