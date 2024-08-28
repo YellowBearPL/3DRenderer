@@ -371,9 +371,56 @@ int main(int argc, char *argv[])
             oldTime = time;
             time = double(SDL_GetTicks64());
             double frameTime = (time - oldTime) / 1000.0;
+            SDL_SetRenderDrawColor(image, 255, 255, 255, 255);
             SDLTest_DrawString(image, 0, 0, std::to_string(1.0 / frameTime).c_str());
             double moveSpeed = frameTime * 5.0;
             double rotSpeed = frameTime * 3.0;
+            const Uint8* keystate = SDL_GetKeyboardState(nullptr);
+            if (keystate[SDL_SCANCODE_UP])
+            {
+                if (worldMap[int(posX + (dirX * moveSpeed))][int(posY)] == false)
+                {
+                    posX += dirX * moveSpeed;
+                }
+
+                if (worldMap[int(posX)][int(posY + (dirY * moveSpeed))] == false)
+                {
+                    posY += dirY * moveSpeed;
+                }
+            }
+
+            if (keystate[SDL_SCANCODE_DOWN])
+            {
+                if (worldMap[int(posX - (dirX * moveSpeed))][int(posY)] == false)
+                {
+                    posX -= dirX * moveSpeed;
+                }
+
+                if (worldMap[int(posX)][int(posY - (dirY * moveSpeed))] == false)
+                {
+                    posY -= dirY * moveSpeed;
+                }
+            }
+
+            if (keystate[SDL_SCANCODE_RIGHT])
+            {
+                double oldDirX = dirX;
+                dirX = (dirX * cos(-rotSpeed)) - (dirY * sin(-rotSpeed));
+                dirY = (oldDirX * sin(-rotSpeed)) + (dirY * cos(-rotSpeed));
+                double oldPlaneX = planeX;
+                planeX = (planeX * cos(-rotSpeed)) - (planeY * sin(-rotSpeed));
+                planeY = (oldPlaneX * sin(-rotSpeed)) + (planeY * cos(-rotSpeed));
+            }
+
+            if (keystate[SDL_SCANCODE_LEFT])
+            {
+                double oldDirX = dirX;
+                dirX = (dirX * cos(rotSpeed)) - (dirY * sin(rotSpeed));
+                dirY = (oldDirX * sin(rotSpeed)) + (dirY * cos(rotSpeed));
+                double oldPlaneX = planeX;
+                planeX = (planeX * cos(rotSpeed)) - (planeY * sin(rotSpeed));
+                planeY = (oldPlaneX * sin(rotSpeed)) + (planeY * cos(rotSpeed));
+            }
         }
 
         ImGui::End();
