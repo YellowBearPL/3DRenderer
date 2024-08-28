@@ -111,11 +111,18 @@ int main(int argc, char *argv[])
     }
 
     ZShader zshader;
-    double posX = 22, posY = 12;
-    double dirX = -1, dirY = 0;
-    double planeX = 0, planeY = 0.66;
+    double posX = 22.0, posY = 11.5;
+    double dirX = -1.0, dirY = 0.0;
+    double planeX = 0.0, planeY = 0.66;
     double time = 0;
     double oldTime = 0;
+    std::vector<Uint32> buffer(screenHeight * screenWidth);
+    std::array<std::vector<int>, 8> texture;
+    for (int i = 0; i < 8; i++)
+    {
+        texture[i].resize(TEX_WIDTH * TEX_HEIGHT);
+    }
+
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
