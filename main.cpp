@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
                 {
                     auto texY = int(texPos) & (TEX_SIZE - 1);
                     texPos += step;
-                    Uint32 uColor = texture[texNum][(TEX_SIZE * texY) + texX];
+                    Uint32 uColor = texture[texNum][(TEX_SIZE * texX) + texY];
                     if (side == 1)
                     {
                         uColor = (uColor >> 1) & 8355711;
