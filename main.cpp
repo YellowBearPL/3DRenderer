@@ -12,6 +12,7 @@
 #include <memory>
 #include <random>
 #include <vector>
+#include <SDL2/SDL_test.h>
 
 #define MAP_WIDTH 24
 #define MAP_HEIGHT 24
@@ -252,6 +253,8 @@ int main(int argc, char *argv[])
         ImGui::Checkbox("Render", &raycast);
         if (raycast)
         {
+            SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
+            SDL_RenderClear(image);
             for (int x = 0; x < screenWidth; x++)
             {
                 double cameraX = (2 * x / double(screenWidth)) - 1;
@@ -364,6 +367,13 @@ int main(int argc, char *argv[])
                 SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
                 SDL_RenderDrawLine(image, x, drawStart, x, drawEnd);
             }
+
+            oldTime = time;
+            time = double(SDL_GetTicks64());
+            double frameTime = (time - oldTime) / 1000.0;
+            SDLTest_DrawString(image, 0, 0, std::to_string(1.0 / frameTime).c_str());
+            double moveSpeed = frameTime * 5.0;
+            double rotSpeed = frameTime * 3.0;
         }
 
         ImGui::End();

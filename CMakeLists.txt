@@ -34,4 +34,4 @@ add_executable(3DRenderer main.cpp
         Geometry.cpp
         Geometry.h)
 
-target_link_libraries(3DRenderer SDL2)
+target_link_libraries(3DRenderer SDL2_test SDL2)
