@@ -107,6 +107,7 @@ int main(int argc, char *argv[])
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
     SDL_CreateWindowAndRenderer(screenWidth, screenHeight, 0, &window, &image);
+    SDL_SetWindowTitle(window, "3D Renderer!")
     SDL_Texture *frame = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, screenWidth, screenHeight);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
