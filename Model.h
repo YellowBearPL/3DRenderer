@@ -33,9 +33,5 @@ public:
     Vec3f vert(int iface, int nthvert) { return verts[faces[iface][nthvert].x]; }
 
     Vec2f uv(int iface, int nthvert) { return vUv[faces[iface][nthvert].y]; };
-
-    SDL_Color diffuse(const Vec2f &uvf);
-
-    float specular(const Vec2f &uvf);
 };
 #endif//INC_3DRENDERER_MODEL_H

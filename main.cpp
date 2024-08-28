@@ -19,7 +19,6 @@ const int height = 1080;
 const float invWidth = 1 / float(width), invHeight = 1 / float(height);
 const float fov = 30, aspectratio = width / float(height);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
-Vec3f lightDir{1, 1, 1};
 Vec3f eye{1, 1, 3};
 Vec3f center{0, 0, 0};
 Vec3f up{0, 1, 0};
@@ -160,7 +159,6 @@ int main(int argc, char *argv[])
 
         ImGui::End();
         ImGui::Begin("Rasterization!");
-        ImGui::InputFloat("Depth", &Shader::depth);
         if (ImGui::Button("Render"))
         {
             SDL_SetRenderTarget(image, frame);

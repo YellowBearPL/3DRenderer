@@ -22,8 +22,6 @@ void projection(float coeff)
     mProjection[3][2] = coeff;
 }
 
-float Shader::depth = 2000.f;
-
 void Shader::triangle(Mat43<float> &clipc, SDL_Renderer *image, std::vector<float> &zbuffer)
 {
     Mat34<float> pts  = (mViewport * clipc).transpose();

@@ -102,17 +102,3 @@ void Model::loadTexture(std::string filename, std::string suffix, SDL_Surface *&
         std::cerr << "texture file " << texfile << " loading " << ((img = SDL_LoadBMP(texfile.c_str())) ? "ok" : "failed") << std::endl;
     }
 }
-
-SDL_Color Model::diffuse(const Vec2f &uvf)
-{
-    Vec2i uv{static_cast<int>(fmod(abs(uvf.u), 1) * diffusemap->w), static_cast<int>(fmod(abs(uvf.v), 1) * diffusemap->h)};
-    auto *p = (Uint8 *)diffusemap->pixels + (uv.v * diffusemap->pitch) + (uv.u * 3);
-    return {p[2], p[1], p[0], 255};
-}
-
-float Model::specular(const Vec2f &uvf)
-{
-    Vec2i uv{static_cast<int>(fmod(abs(uvf.u), 1) * specularmap->w), static_cast<int>(fmod(abs(uvf.v), 1) * specularmap->h)};
-    auto *p = (Uint8 *)diffusemap->pixels + (uv.v * diffusemap->pitch) + (uv.u * 3);
-    return float(*p);
-}
