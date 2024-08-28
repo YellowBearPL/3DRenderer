@@ -244,8 +244,19 @@ int main(int argc, char *argv[])
             for (int x = 0; x < screenWidth; x++)
             {
                 double cameraX = (2 * x / double(screenWidth)) - 1;
-                double rayDirX = dirX + planeX * cameraX;
-                double rayDirY = dirY + planeY * cameraX;
+                double rayDirX = dirX + (planeX * cameraX);
+                double rayDirY = dirY + (planeY * cameraX);
+                auto mapX = int(posX);
+                auto mapY = int(posY);
+                double sideDistX;
+                double sideDistY;
+                double deltaDistX = (rayDirX == 0) ? 1e30 : std::abs(1 / rayDirX);
+                double deltaDistY = (rayDirY == 0) ? 1e30 : std::abs(1 / rayDirY);
+                double perpWallDist;
+                int stepX;
+                int stepY;
+                int hit = 0;
+                int side;
             }
         }
 
