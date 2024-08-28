@@ -51,7 +51,7 @@ std::vector<std::vector<int>> worldMap =
                 {1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
                 {1, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
                 {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
-};
+        };
 
 extern Matrix modelView;
 
@@ -97,6 +97,11 @@ int main(int argc, char *argv[])
     }
 
     ZShader zshader;
+    double posX = 22, posY = 12;
+    double dirX = -1, dirY = 0;
+    double planeX = 0, planeY = 0.66;
+    double time = 0;
+    double oldTime = 0;
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
