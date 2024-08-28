@@ -278,6 +278,27 @@ int main(int argc, char *argv[])
                     stepY = 1;
                     sideDistY = (mapY + 1.0 - posY) * deltaDistY;
                 }
+
+                while (hit == 0)
+                {
+                    if (sideDistX < sideDistY)
+                    {
+                        sideDistX += deltaDistX;
+                        mapX += stepX;
+                        side = 0;
+                    }
+                    else
+                    {
+                        sideDistY += deltaDistY;
+                        mapY += stepY;
+                        side = 1;
+                    }
+
+                    if (worldMap[mapX][mapY] > 0)
+                    {
+                        hit = 1;
+                    }
+                }
             }
         }
 
