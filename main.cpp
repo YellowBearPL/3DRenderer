@@ -308,6 +308,19 @@ int main(int argc, char *argv[])
                 {
                     perpWallDist = (sideDistY - deltaDistY);
                 }
+
+                auto lineHeight = int(screenHeight / perpWallDist);
+                int drawStart = (-lineHeight / 2) + (screenHeight / 2);
+                if (drawStart < 0)
+                {
+                    drawStart = 0;
+                }
+
+                int drawEnd = lineHeight / 2 + screenHeight / 2;
+                if (drawEnd >= screenHeight)
+                {
+                    drawEnd = screenHeight - 1;
+                }
             }
         }
 
