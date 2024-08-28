@@ -141,6 +141,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    SDL_Surface *srf = SDL_CreateRGBSurface(0, screenWidth, screenHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
@@ -398,13 +399,36 @@ int main(int argc, char *argv[])
                         uColor = (uColor >> 1) & 8355711;
                     }
 
-                    buffer[(screenHeight * y) + x] = uColor;
+                    buffer[(screenWidth * y) + x] = uColor;
+                }
+            }
+
+            auto *bufp = (Uint32 *)srf->pixels;
+            for (int y = 0; y < screenHeight; y++)
+            {
+                for (int x = 0; x < screenWidth; x++)
+                {
+                    *bufp = buffer[(y * screenWidth) + x];
+                    bufp++;
+                }
+
+                bufp += srf->pitch / 4;
+                bufp -= screenWidth;
+            }
+
+            for (int y = 0; y < screenHeight; y++)
+            {
+                for (int x = 0; x < screenWidth; x++)
+                {
+                    buffer[(screenWidth * y) + x] = 0;
                 }
             }
 
             oldTime = time;
             time = double(SDL_GetTicks64());
             double frameTime = (time - oldTime) / 1000.0;
+            SDL_UpdateTexture(frame, nullptr, srf->pixels, srf->pitch);
+            SDL_RenderCopy(image, frame, nullptr, nullptr);
             SDL_SetRenderDrawColor(image, 255, 255, 255, 255);
             SDLTest_DrawString(image, 0, 0, std::to_string(1.0 / frameTime).c_str());
             double moveSpeed = frameTime * 5.0;
