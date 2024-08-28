@@ -74,6 +74,17 @@ public:
     }
 };
 
+SDL_Color operator/(const SDL_Color &color, const double &f)
+{
+    return {static_cast<Uint8>(color.r / f), static_cast<Uint8>(color.g / f), static_cast<Uint8>(color.b / f), color.a};
+}
+
+SDL_Color &operator/=(SDL_Color &color, const double &f)
+{
+    color = color / f;
+    return color;
+}
+
 int main(int argc, char *argv[])
 {
     SDL_Color color;
@@ -316,11 +327,42 @@ int main(int argc, char *argv[])
                     drawStart = 0;
                 }
 
-                int drawEnd = lineHeight / 2 + screenHeight / 2;
+                int drawEnd = (lineHeight / 2) + (screenHeight / 2);
                 if (drawEnd >= screenHeight)
                 {
                     drawEnd = screenHeight - 1;
                 }
+
+                switch (worldMap[mapX][mapY])
+                {
+                    case 1:
+                        color = {255, 0, 0, 255};
+                        break;
+
+                    case 2:
+                        color = {0, 255, 0, 255};
+                        break;
+
+                    case 3:
+                        color = {0, 0, 255, 255};
+                        break;
+
+                    case 4:
+                        color = {255, 255, 255, 255};
+                        break;
+
+                    default:
+                        color = {255, 255, 0, 255};
+                        break;
+                }
+
+                if (side == 1)
+                {
+                    color /= 2;
+                }
+
+                SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
+                SDL_RenderDrawLine(image, x, drawStart, x, drawEnd);
             }
         }
 
