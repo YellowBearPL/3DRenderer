@@ -257,6 +257,27 @@ int main(int argc, char *argv[])
                 int stepY;
                 int hit = 0;
                 int side;
+                if (rayDirX < 0)
+                {
+                    stepX = -1;
+                    sideDistX = (posX - mapX) * deltaDistX;
+                }
+                else
+                {
+                    stepX = 1;
+                    sideDistX = (mapX + 1.0 - posX) * deltaDistX;
+                }
+
+                if (rayDirY < 0)
+                {
+                    stepY = -1;
+                    sideDistY = (posY - mapY) * deltaDistY;
+                }
+                else
+                {
+                    stepY = 1;
+                    sideDistY = (mapY + 1.0 - posY) * deltaDistY;
+                }
             }
         }
 
