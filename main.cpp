@@ -14,8 +14,7 @@
 #include <vector>
 #include <SDL2/SDL_test.h>
 
-#define TEX_WIDTH 64
-#define TEX_HEIGHT 64
+#define TEX_SIZE 64
 #define MAP_WIDTH 24
 #define MAP_HEIGHT 24
 
@@ -120,24 +119,35 @@ int main(int argc, char *argv[])
     std::array<std::vector<int>, 8> texture;
     for (int i = 0; i < 8; i++)
     {
-        texture[i].resize(TEX_WIDTH * TEX_HEIGHT);
+        texture[i].resize(TEX_SIZE * TEX_SIZE);
     }
 
-    for (int x = 0; x < TEX_WIDTH; x++)
+    for (int x = 0; x < TEX_SIZE; x++)
     {
-        for (int y = 0; y < TEX_HEIGHT; y++)
+        for (int y = 0; y < TEX_SIZE; y++)
         {
-            int xorcolor = (x * 256 / TEX_WIDTH) ^ (y * 256 / TEX_HEIGHT);
-            int ycolor = y * 256 / TEX_HEIGHT;
-            int xycolor = (y * 128 / TEX_HEIGHT) + (x * 128 / TEX_WIDTH);
-            texture[0][(TEX_WIDTH * y) + x] = 65536 * 254 * (x != y && x != TEX_WIDTH - y);
-            texture[1][(TEX_WIDTH * y) + x] = xycolor + (256 * xycolor) + (65536 * xycolor);
-            texture[2][(TEX_WIDTH * y) + x] = (256 * xycolor) + (65536 * xycolor);
-            texture[3][(TEX_WIDTH * y) + x] = xorcolor + (256 * xorcolor) + (65536 * xorcolor);
-            texture[4][(TEX_WIDTH * y) + x] = 256 * xorcolor;
-            texture[5][(TEX_WIDTH * y) + x] = 65536 * 192 * (x % 16 && y % 16);
-            texture[6][(TEX_WIDTH * y) + x] = 65536 * ycolor;
-            texture[7][(TEX_WIDTH * y) + x] = 128 + (256 * 128) + (65536 * 128);
+            int xorcolor = (x * 256 / TEX_SIZE) ^ (y * 256 / TEX_SIZE);
+            int ycolor = y * 256 / TEX_SIZE;
+            int xycolor = (y * 128 / TEX_SIZE) + (x * 128 / TEX_SIZE);
+            texture[0][(TEX_SIZE * y) + x] = 65536 * 254 * (x != y && x != TEX_SIZE - y);
+            texture[1][(TEX_SIZE * y) + x] = xycolor + (256 * xycolor) + (65536 * xycolor);
+            texture[2][(TEX_SIZE * y) + x] = (256 * xycolor) + (65536 * xycolor);
+            texture[3][(TEX_SIZE * y) + x] = xorcolor + (256 * xorcolor) + (65536 * xorcolor);
+            texture[4][(TEX_SIZE * y) + x] = 256 * xorcolor;
+            texture[5][(TEX_SIZE * y) + x] = 65536 * 192 * (x % 16 && y % 16);
+            texture[6][(TEX_SIZE * y) + x] = 65536 * ycolor;
+            texture[7][(TEX_SIZE * y) + x] = 128 + (256 * 128) + (65536 * 128);
+        }
+    }
+
+    for (size_t i = 0; i < 8; i++)
+    {
+        for (size_t x = 0; x < TEX_SIZE; x++)
+        {
+            for (size_t y = 0; y < x; y++)
+            {
+                std::swap(texture[i][(TEX_SIZE * y) + x], texture[i][(TEX_SIZE * x) + y]);
+            }
         }
     }
 
@@ -376,24 +386,24 @@ int main(int argc, char *argv[])
                 }
 
                 wallX -= floor((wallX));
-                auto texX = int(wallX * double(TEX_WIDTH));
+                auto texX = int(wallX * double(TEX_SIZE));
                 if (side == 0 && rayDirX > 0)
                 {
-                    texX = TEX_WIDTH - texX - 1;
+                    texX = TEX_SIZE - texX - 1;
                 }
 
                 if (side == 1 && rayDirY < 0)
                 {
-                    texX = TEX_WIDTH - texX - 1;
+                    texX = TEX_SIZE - texX - 1;
                 }
 
-                double step = 1.0 * TEX_HEIGHT / lineHeight;
+                double step = 1.0 * TEX_SIZE / lineHeight;
                 double texPos = (drawStart - (screenHeight / 2.) + (lineHeight / 2.)) * step;
                 for (int y = drawStart; y < drawEnd; y++)
                 {
-                    auto texY = int(texPos) & (TEX_HEIGHT - 1);
+                    auto texY = int(texPos) & (TEX_SIZE - 1);
                     texPos += step;
-                    Uint32 uColor = texture[texNum][(TEX_HEIGHT * texY) + texX];
+                    Uint32 uColor = texture[texNum][(TEX_SIZE * texY) + texX];
                     if (side == 1)
                     {
                         uColor = (uColor >> 1) & 8355711;
