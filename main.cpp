@@ -13,15 +13,45 @@
 #include <random>
 #include <vector>
 
+#define MAP_WIDTH 24
+#define MAP_HEIGHT 24
+
 std::unique_ptr<Model> model = nullptr;
-const int width = 1920;
-const int height = 1080;
-const float invWidth = 1 / float(width), invHeight = 1 / float(height);
-const float fov = 30, aspectratio = width / float(height);
+const int screenWidth = 1920;
+const int screenHeight = 1080;
+const float invWidth = 1 / float(screenWidth), invHeight = 1 / float(screenHeight);
+const float fov = 30, aspectratio = screenWidth / float(screenHeight);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
 Vec3f eye{1, 1, 3};
 Vec3f center{0, 0, 0};
 Vec3f up{0, 1, 0};
+std::vector<std::vector<int>> worldMap =
+        {
+                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0, 0, 0, 0, 3, 0, 3, 0, 3, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 2, 2, 0, 2, 2, 0, 0, 0, 0, 3, 0, 3, 0, 3, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 4, 0, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 4, 0, 0, 0, 0, 5, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 4, 0, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 4, 0, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+};
 
 extern Matrix modelView;
 
@@ -57,11 +87,11 @@ int main(int argc, char *argv[])
     }
 
     eye.lookat(center, up);
-    viewport(width / 8, height / 8, width * 3 / 4, height * 3 / 4);
+    viewport(screenWidth / 8, screenHeight / 8, screenWidth * 3 / 4, screenHeight * 3 / 4);
     projection(-1.f / (eye - center).norm());
     std::vector<Vec4f> screenCoords(3);
-    std::vector<float> zbuffer(width * height);
-    for (int i = width * height; --i;)
+    std::vector<float> zbuffer(screenWidth * screenHeight);
+    for (int i = screenWidth * screenHeight; --i;)
     {
         zbuffer[i] = -std::numeric_limits<float>::max();
     }
@@ -71,8 +101,8 @@ int main(int argc, char *argv[])
     SDL_Renderer *image;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(width, height, 0, &window, &image);
-    SDL_Texture *frame = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, width, height);
+    SDL_CreateWindowAndRenderer(screenWidth, screenHeight, 0, &window, &image);
+    SDL_Texture *frame = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, screenWidth, screenHeight);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
@@ -144,9 +174,9 @@ int main(int argc, char *argv[])
             Ray::light.brightness = lp[3];
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
-            for (int j = 0; j < height; j++)
+            for (int j = 0; j < screenHeight; j++)
             {
-                for (int i = 0; i < width; i++)
+                for (int i = 0; i < screenWidth; i++)
                 {
                     Ray primRay;
                     primRay.computePrimRay(i, j);
@@ -174,11 +204,11 @@ int main(int argc, char *argv[])
                 zshader.triangle(zshader.varyingTri, image, zbuffer);
             }
 
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < screenWidth; x++)
             {
-                for (int y = 0; y < height; y++)
+                for (int y = 0; y < screenHeight; y++)
                 {
-                    if (zbuffer[x + (y * width)] < -1e5)
+                    if (zbuffer[x + (y * screenWidth)] < -1e5)
                     {
                         continue;
                     }
