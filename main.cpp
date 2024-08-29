@@ -116,42 +116,30 @@ int main(int argc, char *argv[])
     double time = 0;
     double oldTime = 0;
     std::vector<Uint32> buffer(screenHeight * screenWidth);
-    std::array<std::vector<int>, 8> texture;
+    std::array<SDL_Surface *, 8> texture{};
     for (int i = 0; i < 8; i++)
     {
-        texture[i].resize(TEX_SIZE * TEX_SIZE);
+        texture[i] = SDL_LoadBMP((std::string("pics/texture") + std::to_string(i) + ".bmp").c_str());
     }
 
-    for (int x = 0; x < TEX_SIZE; x++)
-    {
-        for (int y = 0; y < TEX_SIZE; y++)
-        {
-            int xorcolor = (x * 256 / TEX_SIZE) ^ (y * 256 / TEX_SIZE);
-            int ycolor = y * 256 / TEX_SIZE;
-            int xycolor = (y * 128 / TEX_SIZE) + (x * 128 / TEX_SIZE);
-            texture[0][(TEX_SIZE * y) + x] = 65536 * 254 * (x != y && x != TEX_SIZE - y);
-            texture[1][(TEX_SIZE * y) + x] = xycolor + (256 * xycolor) + (65536 * xycolor);
-            texture[2][(TEX_SIZE * y) + x] = (256 * xycolor) + (65536 * xycolor);
-            texture[3][(TEX_SIZE * y) + x] = xorcolor + (256 * xorcolor) + (65536 * xorcolor);
-            texture[4][(TEX_SIZE * y) + x] = 256 * xorcolor;
-            texture[5][(TEX_SIZE * y) + x] = 65536 * 192 * (x % 16 && y % 16);
-            texture[6][(TEX_SIZE * y) + x] = 65536 * ycolor;
-            texture[7][(TEX_SIZE * y) + x] = 128 + (256 * 128) + (65536 * 128);
-        }
-    }
-
+    Uint8 *p, *q;
     for (size_t i = 0; i < 8; i++)
     {
         for (size_t x = 0; x < TEX_SIZE; x++)
         {
             for (size_t y = 0; y < x; y++)
             {
-                std::swap(texture[i][(TEX_SIZE * y) + x], texture[i][(TEX_SIZE * x) + y]);
+                p = (Uint8 *)texture[i]->pixels + (y * texture[i]->pitch) + (x * 3);
+                q = (Uint8 *)texture[i]->pixels + (x * texture[i]->pitch) + (y * 3);
+                std::swap(p[0], q[0]);
+                std::swap(p[1], q[1]);
+                std::swap(p[2], q[2]);
             }
         }
     }
 
     SDL_Surface *srf = SDL_CreateRGBSurface(0, screenWidth, screenHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+    srf->pixels = buffer.data();
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
@@ -403,7 +391,8 @@ int main(int argc, char *argv[])
                 {
                     auto texY = int(texPos) & (TEX_SIZE - 1);
                     texPos += step;
-                    Uint32 uColor = texture[texNum][(TEX_SIZE * texX) + texY];
+                    p = (Uint8 *)texture[texNum]->pixels + (texY * texture[texNum]->pitch) + (texX * 3);
+                    Uint32 uColor = p[0] | p[1] << 8 | p[2] << 16;
                     if (side == 1)
                     {
                         uColor = (uColor >> 1) & 8355711;
@@ -413,19 +402,8 @@ int main(int argc, char *argv[])
                 }
             }
 
-            auto *bufp = (Uint32 *)srf->pixels;
-            for (int y = 0; y < screenHeight; y++)
-            {
-                for (int x = 0; x < screenWidth; x++)
-                {
-                    *bufp = buffer[(y * screenWidth) + x];
-                    bufp++;
-                }
-
-                bufp += srf->pitch / 4;
-                bufp -= screenWidth;
-            }
-
+            SDL_UpdateTexture(frame, nullptr, srf->pixels, srf->pitch);
+            SDL_RenderCopy(image, frame, nullptr, nullptr);
             for (int y = 0; y < screenHeight; y++)
             {
                 for (int x = 0; x < screenWidth; x++)
@@ -437,8 +415,6 @@ int main(int argc, char *argv[])
             oldTime = time;
             time = double(SDL_GetTicks64());
             double frameTime = (time - oldTime) / 1000.0;
-            SDL_UpdateTexture(frame, nullptr, srf->pixels, srf->pitch);
-            SDL_RenderCopy(image, frame, nullptr, nullptr);
             SDL_SetRenderDrawColor(image, 255, 255, 255, 255);
             SDLTest_DrawString(image, 0, 0, std::to_string(1.0 / frameTime).c_str());
             double moveSpeed = frameTime * 5.0;
