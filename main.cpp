@@ -434,8 +434,8 @@ int main(int argc, char *argv[])
                     double currentFloorX = weight * floorXWall + (1.0 - weight) * posX;
                     double currentFloorY = weight * floorYWall + (1.0 - weight) * posY;
                     int floorTexX, floorTexY;
-                    floorTexX = int(currentFloorX * TEX_WIDTH) % TEX_WIDTH;
-                    floorTexY = int(currentFloorY * TEX_HEIGHT) % TEX_HEIGHT;
+                    floorTexX = int(currentFloorX * TEX_WIDTH / 4) % TEX_WIDTH;
+                    floorTexY = int(currentFloorY * TEX_HEIGHT / 4) % TEX_HEIGHT;
                     ptr = (Uint8 *)texture[floorTexture]->pixels + (floorTexY * texture[floorTexture]->pitch) + (floorTexX * 3);
                     buffer[(screenWidth * y) + x] = ((ptr[0] | ptr[1] << 8 | ptr[2] << 16) >> 1) & 8355711;
                     ptr = (Uint8 *)texture[6]->pixels + (floorTexY * texture[6]->pitch) + (floorTexX * 3);
