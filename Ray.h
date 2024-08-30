@@ -13,6 +13,8 @@ extern const float angle;
 
 SDL_Color operator*(const SDL_Color &color, const double &f);
 
+SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2);
+
 class Ray
 {
 public:

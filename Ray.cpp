@@ -15,7 +15,7 @@ SDL_Color operator*(const SDL_Color &color, const double &f)
 
 SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2)
 {
-    return {static_cast<Uint8>(v1.r + v2.r), static_cast<Uint8>(v1.b + v2.b), static_cast<Uint8>(v1.g + v2.g), static_cast<Uint8>(v1.a + v2.a)};
+    return {static_cast<Uint8>(v1.r + v2.r), static_cast<Uint8>(v1.g + v2.g), static_cast<Uint8>(v1.b + v2.b), static_cast<Uint8>(v1.a + v2.a)};
 }
 
 void Ray::computePrimRay(int x, int y)

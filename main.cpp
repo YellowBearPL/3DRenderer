@@ -145,6 +145,21 @@ void sortSprites(std::vector<int> &order, std::vector<double> &dist, int amount)
     }
 }
 
+Uint32 rgbToInt(const SDL_Color& colorRgba)
+{
+    return (colorRgba.b | (colorRgba.g << 8) | (colorRgba.r << 16) | (colorRgba.a << 24));
+}
+
+SDL_Color intToRgb(Uint32 colorInt)
+{
+    SDL_Color ColorRGBA;
+    ColorRGBA.a = (colorInt & 0xFF000000) >> 24;
+    ColorRGBA.r = (colorInt & 0x00FF0000) >> 16;
+    ColorRGBA.g = (colorInt & 0x0000FF00) >> 8;
+    ColorRGBA.b = (colorInt & 0x000000FF);
+    return ColorRGBA;
+}
+
 int main(int argc, char *argv[])
 {
     SDL_Color color;
@@ -181,6 +196,8 @@ int main(int argc, char *argv[])
         {
             error++;
         }
+
+        std::cout << texture[i]->format->format << std::endl;
     }
 
     for (int i = 0; i < 3; i++)
@@ -554,7 +571,7 @@ int main(int argc, char *argv[])
                             Uint32 uColor = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
                             if ((uColor & 0x00FFFFFF) != 0)
                             {
-                                buffer[(screenWidth * y) + stripe] = uColor;
+                                buffer[(screenWidth * y) + stripe] = rgbToInt((intToRgb(buffer[(screenWidth * y) + stripe]) / 2) + (intToRgb(uColor) / 2));
                             }
                         }
                 }
