@@ -137,6 +137,8 @@ int main(int argc, char *argv[])
     Uint8 *ptr;
     SDL_Surface *srf = SDL_CreateRGBSurface(0, screenWidth, screenHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     srf->pixels = buffer.data();
+    double currentDist, distPlayer = 0.0, distWall, floorXWall, floorYWall;
+    int floorTexture = 3;
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
@@ -278,41 +280,6 @@ int main(int argc, char *argv[])
         {
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
-            for(int y = 0; y < screenHeight; y++)
-            {
-                auto rayDirX0 = float(dirX - planeX);
-                auto rayDirY0 = float(dirY - planeY);
-                auto rayDirX1 = float(dirX + planeX);
-                auto rayDirY1 = float(dirY + planeY);
-                int p = y - (screenHeight / 2);
-                float posZ = 0.5 * screenHeight;
-                float rowDistance = posZ / float(p);
-                float floorStepX = rowDistance * (rayDirX1 - rayDirX0) / screenWidth;
-                float floorStepY = rowDistance * (rayDirY1 - rayDirY0) / screenWidth;
-                auto floorX = float(posX) + (rowDistance * rayDirX0);
-                auto floorY = float(posY) + (rowDistance * rayDirY0);
-                for (int x = 0; x < screenWidth; x++)
-                {
-                    auto cellX = int(floorX);
-                    auto cellY = int(floorY);
-                    auto tx = int(TEX_WIDTH * (floorX - float(cellX))) & (TEX_WIDTH - 1);
-                    auto ty = int(TEX_HEIGHT * (floorY - float(cellY))) & (TEX_HEIGHT - 1);
-                    floorX += floorStepX;
-                    floorY += floorStepY;
-                    int floorTexture = 3;
-                    int ceilingTexture = 6;
-                    Uint32 uColor;
-                    ptr = (Uint8 *)texture[floorTexture]->pixels + (ty * texture[floorTexture]->pitch) + (tx * 3);
-                    uColor = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
-                    uColor = (uColor >> 1) & 8355711;
-                    buffer[(screenWidth * y) + x] = uColor;
-                    ptr = (Uint8 *)texture[ceilingTexture]->pixels + (ty * texture[ceilingTexture]->pitch) + (tx * 3);
-                    uColor = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
-                    uColor = (uColor >> 1) & 8355711;
-                    buffer[(screenWidth * (screenHeight - y - 1)) + x] = uColor;
-                }
-            }
-
             for (int x = 0; x < screenWidth; x++)
             {
                 double cameraX = (2 * x / double(screenWidth)) - 1;
@@ -431,6 +398,48 @@ int main(int argc, char *argv[])
                     }
 
                     buffer[(screenWidth * y) + x] = uColor;
+                }
+
+                if (side == 0 && rayDirX > 0)
+                {
+                    floorXWall = mapX;
+                    floorYWall = mapY + wallX;
+                }
+                else if (side == 0 && rayDirX < 0)
+                {
+                    floorXWall = mapX + 1.0;
+                    floorYWall = mapY + wallX;
+                }
+                else if (side == 1 && rayDirY > 0)
+                {
+                    floorXWall = mapX + wallX;
+                    floorYWall = mapY;
+                }
+                else
+                {
+                    floorXWall = mapX + wallX;
+                    floorYWall = mapY + 1.0;
+                }
+
+                distWall = perpWallDist;
+                if (drawEnd < 0)
+                {
+                    drawEnd = screenHeight;
+                }
+
+                for (int y = drawEnd + 1; y < screenHeight; y++)
+                {
+                    currentDist = screenHeight / ((2.0 * y) - screenHeight);
+                    double weight = (currentDist - distPlayer) / (distWall - distPlayer);
+                    double currentFloorX = weight * floorXWall + (1.0 - weight) * posX;
+                    double currentFloorY = weight * floorYWall + (1.0 - weight) * posY;
+                    int floorTexX, floorTexY;
+                    floorTexX = int(currentFloorX * TEX_WIDTH) % TEX_WIDTH;
+                    floorTexY = int(currentFloorY * TEX_HEIGHT) % TEX_HEIGHT;
+                    ptr = (Uint8 *)texture[floorTexture]->pixels + (floorTexY * texture[floorTexture]->pitch) + (floorTexX * 3);
+                    buffer[(screenWidth * y) + x] = ((ptr[0] | ptr[1] << 8 | ptr[2] << 16) >> 1) & 8355711;
+                    ptr = (Uint8 *)texture[6]->pixels + (floorTexY * texture[6]->pitch) + (floorTexX * 3);
+                    buffer[(screenWidth * (screenHeight - y)) + x] = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
                 }
             }
 
