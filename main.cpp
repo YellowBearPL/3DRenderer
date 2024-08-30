@@ -19,6 +19,7 @@
 #define TEX_HEIGHT 64
 #define MAP_WIDTH 24
 #define MAP_HEIGHT 24
+#define NUM_SPRITES 19
 
 std::unique_ptr<Model> model = nullptr;
 const int screenWidth = 1920;
@@ -56,7 +57,42 @@ std::vector<std::vector<int>> worldMap =
                 {2, 2, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 2, 0, 5, 0, 5, 0, 0, 0, 5, 5},
                 {2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5}
         };
+class Sprite
+{
+public:
+    double x;
+    double y;
+    int texture;
+    Sprite(double x, double y, int texture) : x(x), y(y), texture(texture) {}
+};
+
+std::array<Sprite, NUM_SPRITES> sprite =
+        {{
+                {20.5, 11.5, 10},
+                {18.5, 4.5, 10},
+                {10.0, 4.5, 10},
+                {10.0, 12.5, 10},
+                {3.5, 6.5, 10},
+                {3.5, 20.5, 10},
+                {3.5, 14.5, 10},
+                {14.5, 20.5, 10},
+                {18.5, 10.5, 9},
+                {18.5, 11.5, 9},
+                {18.5, 12.5, 9},
+                {21.5, 1.5, 8},
+                {15.5, 1.5, 8},
+                {16.0, 1.8, 8},
+                {16.2, 1.2, 8},
+                {3.5, 2.5, 8},
+                {9.5, 15.5, 8},
+                {10.0, 15.1, 8},
+                {10.5, 15.8, 8},
+        }};
 std::vector<Uint32> buffer(screenHeight * screenWidth);
+std::array<double, screenWidth> zBuffer;
+std::array<int, NUM_SPRITES> spriteOrder;
+std::array<double, NUM_SPRITES> spriteDistance;
+void sortSprites(int &order, double &dist, int amount);
 
 extern Matrix modelView;
 
@@ -118,7 +154,7 @@ int main(int argc, char *argv[])
     double planeX = 0.0, planeY = 0.66;
     double time = 0;
     double oldTime = 0;
-    std::array<SDL_Surface *, 8> texture{};
+    std::array<SDL_Surface *, 11> texture{};
     unsigned error = 0;
     for (int i = 0; i < 8; i++)
     {
