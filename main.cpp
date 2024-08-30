@@ -137,7 +137,6 @@ int main(int argc, char *argv[])
     Uint8 *ptr;
     SDL_Surface *srf = SDL_CreateRGBSurface(0, screenWidth, screenHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     srf->pixels = buffer.data();
-    double currentDist, distPlayer = 0.0, distWall, floorXWall, floorYWall;
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
@@ -399,6 +398,7 @@ int main(int argc, char *argv[])
                     buffer[(screenWidth * y) + x] = uColor;
                 }
 
+                double floorXWall, floorYWall;
                 if (side == 0 && rayDirX > 0)
                 {
                     floorXWall = mapX;
@@ -420,6 +420,7 @@ int main(int argc, char *argv[])
                     floorYWall = mapY + 1.0;
                 }
 
+                double distWall, distPlayer, currentDist;
                 distWall = perpWallDist;
                 if (drawEnd < 0)
                 {
@@ -435,18 +436,7 @@ int main(int argc, char *argv[])
                     int floorTexX, floorTexY;
                     floorTexX = int(currentFloorX * TEX_WIDTH) % TEX_WIDTH;
                     floorTexY = int(currentFloorY * TEX_HEIGHT) % TEX_HEIGHT;
-                    int checkerBoardPattern = (int(currentFloorX) + int(currentFloorY)) % 2;
-                    int floorTexture;
-                    if (checkerBoardPattern == 0)
-                    {
-                        floorTexture = 3;
-                    }
-                    else
-                    {
-                        floorTexture = 4;
-                    }
-
-                    ptr = (Uint8 *)texture[floorTexture]->pixels + (floorTexY * texture[floorTexture]->pitch) + (floorTexX * 3);
+                    ptr = (Uint8 *)texture[3]->pixels + (floorTexY * texture[3]->pitch) + (floorTexX * 3);
                     buffer[(screenWidth * y) + x] = ((ptr[0] | ptr[1] << 8 | ptr[2] << 16) >> 1) & 8355711;
                     ptr = (Uint8 *)texture[6]->pixels + (floorTexY * texture[6]->pitch) + (floorTexX * 3);
                     buffer[(screenWidth * (screenHeight - y)) + x] = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
