@@ -476,6 +476,8 @@ int main(int argc, char *argv[])
 
                     buffer[(screenWidth * y) + x] = uColor;
                 }
+
+                zBuffer[x] = perpWallDist;
             }
 
             SDL_UpdateTexture(frame, nullptr, srf->pixels, srf->pitch);
