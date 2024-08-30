@@ -90,9 +90,8 @@ std::array<Sprite, NUM_SPRITES> sprite =
         }};
 std::vector<Uint32> buffer(screenHeight * screenWidth);
 std::array<double, screenWidth> zBuffer;
-std::array<int, NUM_SPRITES> spriteOrder;
-std::array<double, NUM_SPRITES> spriteDistance;
-void sortSprites(int &order, double &dist, int amount);
+std::vector<int> spriteOrder(NUM_SPRITES);
+std::vector<double> spriteDistance(NUM_SPRITES);
 
 extern Matrix modelView;
 
@@ -124,6 +123,23 @@ SDL_Color &operator/=(SDL_Color &color, const double &f)
 {
     color = color / f;
     return color;
+}
+
+void sortSprites(std::vector<int> &order, std::vector<double> &dist, int amount)
+{
+    std::vector<std::pair<double, int>> sprites(amount);
+    for (int i = 0; i < amount; i++)
+    {
+        sprites[i].first = dist[i];
+        sprites[i].second = order[i];
+    }
+
+    std::sort(sprites.begin(), sprites.end());
+    for (int i = 0; i < amount; i++)
+    {
+        dist[i] = sprites[amount - i - 1].first;
+        order[i] = sprites[amount - i - 1].second;
+    }
 }
 
 int main(int argc, char *argv[])
@@ -478,6 +494,66 @@ int main(int argc, char *argv[])
                 }
 
                 zBuffer[x] = perpWallDist;
+            }
+
+            for (int i = 0; i < NUM_SPRITES; i++)
+            {
+                spriteOrder[i] = i;
+                spriteDistance[i] = ((posX - sprite[i].x) * (posX - sprite[i].x) + (posY - sprite[i].y) * (posY - sprite[i].y)); //sqrt not taken, unneeded
+            }
+
+            sortSprites(spriteOrder, spriteDistance, NUM_SPRITES);
+
+            for (int i = 0; i < NUM_SPRITES; i++)
+            {
+                double spriteX = sprite[spriteOrder[i]].x - posX;
+                double spriteY = sprite[spriteOrder[i]].y - posY;
+                double invDet = 1.0 / ((planeX * dirY) - (dirX * planeY));
+                double transformX = invDet * ((dirY * spriteX) - (dirX * spriteY));
+                double transformY = invDet * ((-planeY * spriteX) + (planeX * spriteY));
+                auto spriteScreenX = int((screenWidth / 2.) * (1 + (transformX / transformY)));
+                int spriteHeight = abs(int(screenHeight / (transformY)));
+                int drawStartY = (-spriteHeight / 2) + (screenHeight / 2);
+                if (drawStartY < 0)
+                {
+                    drawStartY = 0;
+                }
+
+                int drawEndY = (spriteHeight / 2) + (screenHeight / 2);
+                if (drawEndY >= screenHeight)
+                {
+                    drawEndY = screenHeight - 1;
+                }
+
+                int spriteWidth = abs(int(screenHeight / (transformY)));
+                int drawStartX = (-spriteWidth / 2) + spriteScreenX;
+                if (drawStartX < 0)
+                {
+                    drawStartX = 0;
+                }
+
+                int drawEndX = (spriteWidth / 2) + spriteScreenX;
+                if (drawEndX >= screenWidth)
+                {
+                    drawEndX = screenWidth - 1;
+                }
+
+                for (int stripe = drawStartX; stripe < drawEndX; stripe++)
+                {
+                    auto texX = int(256 * (stripe - ((-spriteWidth / 2) + spriteScreenX)) * TEX_WIDTH / spriteWidth) / 256;
+                    if (transformY > 0 && stripe > 0 && stripe < screenWidth && transformY < zBuffer[stripe])
+                        for (int y = drawStartY; y < drawEndY; y++)
+                        {
+                            int d = ((y) * 256) - (screenHeight * 128) + (spriteHeight * 128);
+                            int texY = ((d * TEX_HEIGHT) / spriteHeight) / 256;
+                            ptr = (Uint8 *)texture[sprite[spriteOrder[i]].texture]->pixels + (texY * texture[sprite[spriteOrder[i]].texture]->pitch) + (texX * 3);
+                            Uint32 uColor = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
+                            if ((uColor & 0x00FFFFFF) != 0)
+                            {
+                                buffer[(screenWidth * y) + stripe] = uColor;
+                            }
+                        }
+                }
             }
 
             SDL_UpdateTexture(frame, nullptr, srf->pixels, srf->pitch);
