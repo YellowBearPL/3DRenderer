@@ -7,14 +7,16 @@
 #include "imgui/imgui_impl_sdl2.h"
 #include "imgui/imgui_impl_sdlrenderer2.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_test.h>
 #include <array>
 #include <cmath>
+#include <iostream>
 #include <memory>
 #include <random>
 #include <vector>
-#include <SDL2/SDL_test.h>
 
-#define TEX_SIZE 64
+#define TEX_WIDTH 64
+#define TEX_HEIGHT 64
 #define MAP_WIDTH 24
 #define MAP_HEIGHT 24
 
@@ -29,31 +31,32 @@ Vec3f center{0, 0, 0};
 Vec3f up{0, 1, 0};
 std::vector<std::vector<int>> worldMap =
         {
-                {4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 7, 7, 7, 7, 7, 7, 7, 7},
-                {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 7},
-                {4, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7},
-                {4, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7},
-                {4, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 7},
-                {4, 0, 4, 0, 0, 0, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 7, 7, 0, 7, 7, 7, 7, 7},
-                {4, 0, 5, 0, 0, 0, 0, 5, 0, 5, 0, 5, 0, 5, 0, 5, 7, 0, 0, 0, 7, 7, 7, 1},
-                {4, 0, 6, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 5, 7, 0, 0, 0, 0, 0, 0, 8},
-                {4, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 7, 1},
-                {4, 0, 8, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 5, 7, 0, 0, 0, 0, 0, 0, 8},
-                {4, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 5, 7, 0, 0, 0, 7, 7, 7, 1},
-                {4, 0, 0, 0, 0, 0, 0, 5, 5, 5, 5, 0, 5, 5, 5, 5, 7, 7, 7, 7, 7, 7, 7, 1},
-                {6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6},
-                {8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4},
-                {6, 6, 6, 6, 6, 6, 0, 6, 6, 6, 6, 0, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6},
-                {4, 4, 4, 4, 4, 4, 0, 4, 4, 4, 6, 0, 6, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3},
-                {4, 0, 0, 0, 0, 0, 0, 0, 0, 4, 6, 0, 6, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2},
-                {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 2, 0, 0, 5, 0, 0, 2, 0, 0, 0, 2},
-                {4, 0, 0, 0, 0, 0, 0, 0, 0, 4, 6, 0, 6, 2, 0, 0, 0, 0, 0, 2, 2, 0, 2, 2},
-                {4, 0, 6, 0, 6, 0, 0, 0, 0, 4, 6, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 2},
-                {4, 0, 0, 5, 0, 0, 0, 0, 0, 4, 6, 0, 6, 2, 0, 0, 0, 0, 0, 2, 2, 0, 2, 2},
-                {4, 0, 6, 0, 6, 0, 0, 0, 0, 4, 6, 0, 6, 2, 0, 0, 5, 0, 0, 2, 0, 0, 0, 2},
-                {4, 0, 0, 0, 0, 0, 0, 0, 0, 4, 6, 0, 6, 2, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2},
-                {4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3}
+                {8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 4, 4, 6, 4, 4, 6, 4, 6, 4, 4, 4, 6, 4},
+                {8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4},
+                {8, 0, 3, 3, 0, 0, 0, 0, 0, 8, 8, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6},
+                {8, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6},
+                {8, 0, 3, 3, 0, 0, 0, 0, 0, 8, 8, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4},
+                {8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 4, 0, 0, 0, 0, 0, 6, 6, 6, 0, 6, 4, 6},
+                {8, 8, 8, 8, 0, 8, 8, 8, 8, 8, 8, 4, 4, 4, 4, 4, 4, 6, 0, 0, 0, 0, 0, 6},
+                {7, 7, 7, 7, 0, 7, 7, 7, 7, 0, 8, 0, 8, 0, 8, 0, 8, 4, 0, 4, 0, 6, 0, 6},
+                {7, 7, 0, 0, 0, 0, 0, 0, 7, 8, 0, 8, 0, 8, 0, 8, 8, 6, 0, 0, 0, 0, 0, 6},
+                {7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 6, 0, 0, 0, 0, 0, 4},
+                {7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 6, 0, 6, 0, 6, 0, 6},
+                {7, 7, 0, 0, 0, 0, 0, 0, 7, 8, 0, 8, 0, 8, 0, 8, 8, 6, 4, 6, 0, 6, 6, 6},
+                {7, 7, 7, 7, 0, 7, 7, 7, 7, 8, 8, 4, 0, 6, 8, 4, 8, 3, 3, 3, 0, 3, 3, 3},
+                {2, 2, 2, 2, 0, 2, 2, 2, 2, 4, 6, 4, 0, 0, 6, 0, 6, 3, 0, 0, 0, 0, 0, 3},
+                {2, 2, 0, 0, 0, 0, 0, 2, 2, 4, 0, 0, 0, 0, 0, 0, 4, 3, 0, 0, 0, 0, 0, 3},
+                {2, 0, 0, 0, 0, 0, 0, 0, 2, 4, 0, 0, 0, 0, 0, 0, 4, 3, 0, 0, 0, 0, 0, 3},
+                {1, 0, 0, 0, 0, 0, 0, 0, 1, 4, 4, 4, 4, 4, 6, 0, 6, 3, 3, 0, 0, 0, 3, 3},
+                {2, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1, 2, 2, 2, 6, 6, 0, 0, 5, 0, 5, 0, 5},
+                {2, 2, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 2, 0, 5, 0, 5, 0, 0, 0, 5, 5},
+                {2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 5, 0, 5, 0, 5, 0, 5, 0, 5},
+                {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5},
+                {2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 2, 5, 0, 5, 0, 5, 0, 5, 0, 5},
+                {2, 2, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 2, 0, 5, 0, 5, 0, 0, 0, 5, 5},
+                {2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5}
         };
+std::vector<Uint32> buffer(screenHeight * screenWidth);
 
 extern Matrix modelView;
 
@@ -115,29 +118,23 @@ int main(int argc, char *argv[])
     double planeX = 0.0, planeY = 0.66;
     double time = 0;
     double oldTime = 0;
-    std::vector<Uint32> buffer(screenHeight * screenWidth);
     std::array<SDL_Surface *, 8> texture{};
+    unsigned error = 0;
     for (int i = 0; i < 8; i++)
     {
-        texture[i] = SDL_LoadBMP((std::string("pics/texture") + std::to_string(i) + ".bmp").c_str());
-    }
-
-    Uint8 *p, *q;
-    for (size_t i = 0; i < 8; i++)
-    {
-        for (size_t x = 0; x < TEX_SIZE; x++)
+        if (!(texture[i] = SDL_LoadBMP((std::string("pics/texture") + std::to_string(i) + ".bmp").c_str())))
         {
-            for (size_t y = 0; y < x; y++)
-            {
-                p = (Uint8 *)texture[i]->pixels + (y * texture[i]->pitch) + (x * 3);
-                q = (Uint8 *)texture[i]->pixels + (x * texture[i]->pitch) + (y * 3);
-                std::swap(p[0], q[0]);
-                std::swap(p[1], q[1]);
-                std::swap(p[2], q[2]);
-            }
+            error++;
         }
     }
 
+    if (error)
+    {
+        std::cout << "error loading images" << std::endl;
+        return 1;
+    }
+
+    Uint8 *p;
     SDL_Surface *srf = SDL_CreateRGBSurface(0, screenWidth, screenHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     srf->pixels = buffer.data();
     SDL_Event event;
@@ -374,22 +371,22 @@ int main(int argc, char *argv[])
                 }
 
                 wallX -= floor((wallX));
-                auto texX = int(wallX * double(TEX_SIZE));
+                auto texX = int(wallX * double(TEX_WIDTH));
                 if (side == 0 && rayDirX > 0)
                 {
-                    texX = TEX_SIZE - texX - 1;
+                    texX = TEX_WIDTH - texX - 1;
                 }
 
                 if (side == 1 && rayDirY < 0)
                 {
-                    texX = TEX_SIZE - texX - 1;
+                    texX = TEX_WIDTH - texX - 1;
                 }
 
-                double step = 1.0 * TEX_SIZE / lineHeight;
+                double step = 1.0 * TEX_HEIGHT / lineHeight;
                 double texPos = (drawStart - (screenHeight / 2.) + (lineHeight / 2.)) * step;
                 for (int y = drawStart; y < drawEnd; y++)
                 {
-                    auto texY = int(texPos) & (TEX_SIZE - 1);
+                    auto texY = int(texPos) & (TEX_HEIGHT - 1);
                     texPos += step;
                     p = (Uint8 *)texture[texNum]->pixels + (texY * texture[texNum]->pitch) + (texX * 3);
                     Uint32 uColor = p[0] | p[1] << 8 | p[2] << 16;
