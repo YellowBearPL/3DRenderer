@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    Uint8 *p;
+    Uint8 *ptr;
     SDL_Surface *srf = SDL_CreateRGBSurface(0, screenWidth, screenHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     srf->pixels = buffer.data();
     SDL_Event event;
@@ -278,6 +278,41 @@ int main(int argc, char *argv[])
         {
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
+            for(int y = 0; y < screenHeight; y++)
+            {
+                auto rayDirX0 = float(dirX - planeX);
+                auto rayDirY0 = float(dirY - planeY);
+                auto rayDirX1 = float(dirX + planeX);
+                auto rayDirY1 = float(dirY + planeY);
+                int p = y - (screenHeight / 2);
+                float posZ = 0.5 * screenHeight;
+                float rowDistance = posZ / float(p);
+                float floorStepX = rowDistance * (rayDirX1 - rayDirX0) / screenWidth;
+                float floorStepY = rowDistance * (rayDirY1 - rayDirY0) / screenWidth;
+                auto floorX = float(posX) + (rowDistance * rayDirX0);
+                auto floorY = float(posY) + (rowDistance * rayDirY0);
+                for (int x = 0; x < screenWidth; x++)
+                {
+                    auto cellX = int(floorX);
+                    auto cellY = int(floorY);
+                    auto tx = int(TEX_WIDTH * (floorX - float(cellX))) & (TEX_WIDTH - 1);
+                    auto ty = int(TEX_HEIGHT * (floorY - float(cellY))) & (TEX_HEIGHT - 1);
+                    floorX += floorStepX;
+                    floorY += floorStepY;
+                    int floorTexture = 3;
+                    int ceilingTexture = 6;
+                    Uint32 uColor;
+                    ptr = (Uint8 *)texture[floorTexture]->pixels + (ty * texture[floorTexture]->pitch) + (tx * 3);
+                    uColor = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
+                    uColor = (uColor >> 1) & 8355711;
+                    buffer[(screenWidth * y) + x] = uColor;
+                    ptr = (Uint8 *)texture[ceilingTexture]->pixels + (ty * texture[ceilingTexture]->pitch) + (tx * 3);
+                    uColor = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
+                    uColor = (uColor >> 1) & 8355711;
+                    buffer[(screenWidth * (screenHeight - y - 1)) + x] = uColor;
+                }
+            }
+
             for (int x = 0; x < screenWidth; x++)
             {
                 double cameraX = (2 * x / double(screenWidth)) - 1;
@@ -388,8 +423,8 @@ int main(int argc, char *argv[])
                 {
                     auto texY = int(texPos) & (TEX_HEIGHT - 1);
                     texPos += step;
-                    p = (Uint8 *)texture[texNum]->pixels + (texY * texture[texNum]->pitch) + (texX * 3);
-                    Uint32 uColor = p[0] | p[1] << 8 | p[2] << 16;
+                    ptr = (Uint8 *)texture[texNum]->pixels + (texY * texture[texNum]->pitch) + (texX * 3);
+                    Uint32 uColor = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
                     if (side == 1)
                     {
                         uColor = (uColor >> 1) & 8355711;
