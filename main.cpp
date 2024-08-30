@@ -164,6 +164,14 @@ int main(int argc, char *argv[])
         }
     }
 
+    for (int i = 0; i < 3; i++)
+    {
+        if (!(texture[i + 8] = SDL_LoadBMP((std::string("pics/sprite") + std::to_string(i) + ".bmp").c_str())))
+        {
+            error++;
+        }
+    }
+
     if (error)
     {
         std::cout << "error loading images" << std::endl;
