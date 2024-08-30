@@ -20,6 +20,9 @@
 #define MAP_WIDTH 24
 #define MAP_HEIGHT 24
 #define NUM_SPRITES 19
+#define U_DIV 1
+#define V_DIV 1
+#define V_MOVE 0.0
 
 std::unique_ptr<Model> model = nullptr;
 const int screenWidth = 1920;
@@ -512,20 +515,21 @@ int main(int argc, char *argv[])
                 double transformX = invDet * ((dirY * spriteX) - (dirX * spriteY));
                 double transformY = invDet * ((-planeY * spriteX) + (planeX * spriteY));
                 auto spriteScreenX = int((screenWidth / 2.) * (1 + (transformX / transformY)));
-                int spriteHeight = abs(int(screenHeight / (transformY)));
-                int drawStartY = (-spriteHeight / 2) + (screenHeight / 2);
+                auto vMoveScreen = int(V_MOVE / transformY);
+                int spriteHeight = abs(int(screenHeight / (transformY))) / V_DIV;
+                int drawStartY = (-spriteHeight / 2) + (screenHeight / 2) + vMoveScreen;
                 if (drawStartY < 0)
                 {
                     drawStartY = 0;
                 }
 
-                int drawEndY = (spriteHeight / 2) + (screenHeight / 2);
+                int drawEndY = (spriteHeight / 2) + (screenHeight / 2) + vMoveScreen;
                 if (drawEndY >= screenHeight)
                 {
                     drawEndY = screenHeight - 1;
                 }
 
-                int spriteWidth = abs(int(screenHeight / (transformY)));
+                int spriteWidth = abs(int(screenHeight / (transformY))) / U_DIV;
                 int drawStartX = (-spriteWidth / 2) + spriteScreenX;
                 if (drawStartX < 0)
                 {
@@ -544,7 +548,7 @@ int main(int argc, char *argv[])
                     if (transformY > 0 && stripe > 0 && stripe < screenWidth && transformY < zBuffer[stripe])
                         for (int y = drawStartY; y < drawEndY; y++)
                         {
-                            int d = ((y) * 256) - (screenHeight * 128) + (spriteHeight * 128);
+                            int d = ((y - vMoveScreen) * 256) - (screenHeight * 128) + (spriteHeight * 128);
                             int texY = ((d * TEX_HEIGHT) / spriteHeight) / 256;
                             ptr = (Uint8 *)texture[sprite[spriteOrder[i]].texture]->pixels + (texY * texture[sprite[spriteOrder[i]].texture]->pitch) + (texX * 3);
                             Uint32 uColor = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
