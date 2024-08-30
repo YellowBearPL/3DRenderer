@@ -322,8 +322,8 @@ int main(int argc, char *argv[])
                 auto mapY = int(posY);
                 double sideDistX;
                 double sideDistY;
-                double deltaDistX = sqrt(1 + ((rayDirY * rayDirY) / (rayDirX * rayDirX)));
-                double deltaDistY = sqrt(1 + ((rayDirX * rayDirX) / (rayDirY * rayDirY)));
+                double deltaDistX = (rayDirX == 0) ? 1e30 : std::abs(1 / rayDirX);
+                double deltaDistY = (rayDirY == 0) ? 1e30 : std::abs(1 / rayDirY);
                 double perpWallDist;
                 int stepX;
                 int stepY;
