@@ -17,8 +17,6 @@
 
 #define TEX_WIDTH 64
 #define TEX_HEIGHT 64
-#define MAP_WIDTH 24
-#define MAP_HEIGHT 24
 #define NUM_SPRITES 19
 #define U_DIV 1
 #define V_DIV 1
