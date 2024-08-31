@@ -133,6 +133,11 @@ SDL_Color operator*(const double &f, const SDL_Color &color)
     return color * f;
 }
 
+SDL_Color operator-(const SDL_Color &c1, const SDL_Color &c2)
+{
+    return {static_cast<Uint8>(c1.r - c2.r), static_cast<Uint8>(c1.g - c2.g), static_cast<Uint8>(c1.b - c2.b), static_cast<Uint8>(c1.a - c2.a)};
+}
+
 void sortSprites(std::vector<int> &order, std::vector<double> &dist, int amount)
 {
     std::vector<std::pair<double, int>> sprites(amount);
@@ -576,7 +581,7 @@ int main(int argc, char *argv[])
                             Uint32 uColor = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
                             if ((uColor & 0x00FFFFFF) != 0)
                             {
-                                buffer[(screenWidth * y) + stripe] = rgbToInt((3 * (intToRgb(buffer[(screenWidth * y) + stripe]) / 4)) + (intToRgb(uColor) / 4));
+                                buffer[(screenWidth * y) + stripe] = rgbToInt(((SDL_Color(255, 255, 255, 255) - intToRgb(buffer[(screenWidth * y) + stripe])) / 2) + (intToRgb(uColor) / 2));
                             }
                         }
                 }
