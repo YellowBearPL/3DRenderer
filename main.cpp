@@ -1,7 +1,6 @@
 #include "Geometry.h"
 #include "Gl.h"
 #include "Model.h"
-#include "Ray.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl2.h"
 #include "imgui/imgui_impl_sdlrenderer2.h"
@@ -232,6 +231,9 @@ int main(int argc, char *argv[])
     Uint8 *ptr;
     SDL_Surface *srf = SDL_CreateRGBSurface(0, imageWidth, imageHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     srf->pixels = buffer.data();
+    auto aspectRatio = double(imageWidth) / imageHeight;
+    double viewportHeight = 2.0;
+    double viewportWidth = viewportHeight * aspectRatio;
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
