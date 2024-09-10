@@ -2,9 +2,10 @@
 #define INC_3DRENDERER_GEOMETRY_H
 #include <SDL2/SDL.h>
 #include <algorithm>
-#include <vector>
 #include <array>
 #include <cmath>
+#include <ostream>
+#include <vector>
 
 template<typename T>
 class Mat44;
@@ -102,11 +103,13 @@ public:
 
     Vec3<T> operator+(const Vec3<T> &v) const { return {x + v.x, y + v.y, z + v.z}; }
 
+    Vec3<T> &operator+=(const Vec3<T> &v);
+
     Vec3<T> operator-(const Vec3<T> &v) const { return {x - v.x, y - v.y, z - v.z}; }
 
-    Vec3<T> operator*(T f) const { return {x * f, y * f, z * f}; }
+    Vec3<T> operator*(T t) const { return {x * t, y * t, z * t}; }
 
-    Vec3<T> &operator*=(T f);
+    Vec3<T> &operator*=(T t);
 
     Vec4<T> embed4(T fill = 1);
 
@@ -124,15 +127,29 @@ public:
 
     void lookat(const Vec3<T> &center, const Vec3<T> &up);
 
-    Vec3<T> operator/(const T &t);
+    Vec3<T> operator/(const T &t) { return *this * 1 / t; }
 
     Vec3<T> &operator/=(const T &t);
+
+    Vec3<T> operator-() const { return {-x, -y, -z}; }
+
+    T length() const { return std::sqrt(lengthSquared()); }
+
+    T lengthSquared() const { return (x * x) + (y * y) + (z * z); }
+
+    Vec3<T> unitVector() { return *this / length(); }
 };
 
 using Vec3f = Vec3<float>;
 using Point = Vec3f;
 using Normal = Vec3f;
 using Vec3i = Vec3<int>;
+
+template<typename T>
+std::ostream& operator<<(std::ostream& out, const Vec3<T> &v) { return out << v.e[0] << ' ' << v.e[1] << ' ' << v.e[2]; }
+
+template<typename T>
+Vec3<T> operator*(double t, const Vec3<T> &v) { return v * t; }
 
 template<typename T>
 class Dt2

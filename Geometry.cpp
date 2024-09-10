@@ -137,9 +137,16 @@ Vec3<T> &Vec3<T>::normalize(T l)
 }
 
 template<typename T>
-Vec3<T> &Vec3<T>::operator*=(T f)
+Vec3<T> &Vec3<T>::operator+=(Vec3<T> const &v)
 {
-    *this = *this * f;
+    *this = *this + v;
+    return *this;
+}
+
+template<typename T>
+Vec3<T> &Vec3<T>::operator*=(T t)
+{
+    *this = *this * t;
     return *this;
 }
 
@@ -183,15 +190,6 @@ void Vec3<T>::lookat(const Vec3<T> &center, const Vec3<T> &up)
     minv[2][2] = vZ.z;
     tr[2][3] = -z;
     modelView = minv * tr;
-}
-
-template<typename T>
-Vec3<T> Vec3<T>::operator/(T const &t)
-{
-    z /= t;
-    y /= t;
-    x /= t;
-    return *this;
 }
 
 template<typename T>
