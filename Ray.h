@@ -7,31 +7,16 @@
 #include <memory>
 #include <vector>
 
-extern const float invWidth, invHeight;
-extern const float aspectratio;
-extern const float angle;
-
-SDL_Color operator*(const SDL_Color &color, const double &f);
-
-SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2);
-
 class Ray
 {
 public:
-    Vec3f direction;
-    Vec3f origin;
-    static std::vector<std::shared_ptr<Object>> objects;
-    static SDL_Color backgroundColor;
-    static float bias;
-    static Point lightPosition;
-    static Light light;
+    Point orig;
+    Vec3f dir;
 
-    void computePrimRay(int x, int y);
+    Ray() = default;
 
-    SDL_Color trace(int depth);
+    Ray(const Point &origin, const Vec3f &direction) : orig(origin), dir(direction) {}
 
-    [[nodiscard]] Ray computeReflectionRay(const Normal &normal, const Point &point) const;
-
-    [[nodiscard]] Ray computeRefractionRay(float index, const Normal &normal, const Point &point) const;
+    [[nodiscard]] Point at(double t) const { return orig + (t * dir); }
 };
 #endif//INC_3DRENDERER_RAY_H

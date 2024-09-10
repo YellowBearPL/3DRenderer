@@ -4,8 +4,8 @@
 
 bool Sphere::intersect(const Ray &ray, Point &point, Normal &normal) const
 {
-    Vec3f l = center - ray.origin;
-    float tca = l.dot(ray.direction);
+    Vec3f l = center - ray.orig;
+    float tca = l.dot(ray.dir);
     if (tca < 0)
     {
         return false;
@@ -24,7 +24,7 @@ bool Sphere::intersect(const Ray &ray, Point &point, Normal &normal) const
         t = tca + thc;
     }
 
-    point = ray.origin + ray.direction * t;
+    point = ray.orig + ray.dir * t;
     normal = point - center;
     normal.normalize();
     return true;
