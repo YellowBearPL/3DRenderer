@@ -7,6 +7,12 @@
 #include <memory>
 #include <vector>
 
+SDL_Color operator*(const SDL_Color &color, const double &f);
+
+SDL_Color operator*(const double &f, const SDL_Color &color);
+
+SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2);
+
 class Ray
 {
 public:
@@ -19,6 +25,6 @@ public:
 
     [[nodiscard]] Point at(double t) const { return orig + (t * dir); }
 
-    static SDL_Color rayColor() { return {0, 0, 0, 255}; }
+    SDL_Color rayColor();
 };
 #endif//INC_3DRENDERER_RAY_H

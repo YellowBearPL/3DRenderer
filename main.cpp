@@ -125,21 +125,6 @@ SDL_Color &operator/=(SDL_Color &color, const double &f)
     return color;
 }
 
-SDL_Color operator*(const SDL_Color &color, const double &f)
-{
-    return {static_cast<Uint8>(color.r * f), static_cast<Uint8>(color.g * f), static_cast<Uint8>(color.b * f), color.a};
-}
-
-SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2)
-{
-    return {static_cast<Uint8>(v1.r + v2.r), static_cast<Uint8>(v1.g + v2.g), static_cast<Uint8>(v1.b + v2.b), static_cast<Uint8>(v1.a + v2.a)};
-}
-
-SDL_Color operator*(const double &f, const SDL_Color &color)
-{
-    return color * f;
-}
-
 SDL_Color operator-(const SDL_Color &c1, const SDL_Color &c2)
 {
     return {static_cast<Uint8>(c1.r - c2.r), static_cast<Uint8>(c1.g - c2.g), static_cast<Uint8>(c1.b - c2.b), static_cast<Uint8>(c1.a - c2.a)};
@@ -286,7 +271,7 @@ int main(int argc, char *argv[])
                     Vec3f pixelCenter = pixel00Loc + (i * pixelDeltaU) + (j * pixelDeltaV);
                     Vec3f rayDirection = pixelCenter - cameraCenter;
                     Ray r{cameraCenter, rayDirection};
-                    SDL_Color pixelColor = Ray::rayColor();
+                    SDL_Color pixelColor = r.rayColor();
                     SDL_SetRenderDrawColor(image, pixelColor.r, pixelColor.g, pixelColor.b, pixelColor.a);
                     SDL_RenderDrawPoint(image, i, j);
                 }
