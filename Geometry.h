@@ -141,7 +141,7 @@ public:
 
     Vec3<T> unitVector() { return *this / length(); }
 
-    bool hitSphere(double radius, const Ray &r);
+    double hitSphere(double radius, const Ray &r);
 };
 
 using Vec3f = Vec3<float>;

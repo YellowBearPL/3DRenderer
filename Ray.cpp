@@ -17,9 +17,11 @@ SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2)
 
 SDL_Color Ray::rayColor()
 {
-    if (Point(0,0,-1).hitSphere(0.5, *this))
+    auto t = Point(0,0,-1).hitSphere(0.5, *this);
+    if (t > 0.0)
     {
-        return {255, 0, 0, 255};
+        Vec3f n = (at(t) - Vec3f(0, 0, -1)).unitVector();
+        return SDL_Color(Uint8((n.x + 1) * 127.5), Uint8((n.y + 1) * 127.5), Uint8((n.z + 1) * 127.5), 255);
     }
 
     Vec3f unitDirection = dir.unitVector();
