@@ -1,6 +1,7 @@
 #include "Geometry.h"
 #include "Gl.h"
 #include "Model.h"
+#include "Ray.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl2.h"
 #include "imgui/imgui_impl_sdlrenderer2.h"
@@ -87,7 +88,7 @@ std::array<Sprite, NUM_SPRITES> sprite =
                 {10.0, 15.1, 8},
                 {10.5, 15.8, 8},
         }};
-std::vector<Uint32> buffer(imageHeight *imageWidth);
+std::vector<Uint32> buffer(imageHeight * imageWidth);
 std::array<double, imageWidth> zBuffer;
 std::vector<int> spriteOrder(NUM_SPRITES);
 std::vector<double> spriteDistance(NUM_SPRITES);
@@ -232,8 +233,16 @@ int main(int argc, char *argv[])
     SDL_Surface *srf = SDL_CreateRGBSurface(0, imageWidth, imageHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     srf->pixels = buffer.data();
     auto aspectRatio = double(imageWidth) / imageHeight;
+    float focalLength = 1.0;
     double viewportHeight = 2.0;
     double viewportWidth = viewportHeight * aspectRatio;
+    Point cameraCenter = {0, 0, 0};
+    Vec3f viewportU{static_cast<float>(viewportWidth), 0, 0};
+    Vec3f viewportV{0, static_cast<float>(-viewportHeight), 0};
+    Vec3f pixelDeltaU = viewportU / imageWidth;
+    Vec3f pixelDeltaV = viewportV / imageHeight;
+    Vec3f viewportUpperLeft = cameraCenter - Vec3f(0, 0, focalLength) - (viewportU / 2) - (viewportV / 2);
+    Vec3f pixel00Loc = viewportUpperLeft + (0.5 * (pixelDeltaU + pixelDeltaV));
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
@@ -274,7 +283,10 @@ int main(int argc, char *argv[])
                 std::clog << "\rScanlines remaining: " << (imageHeight - j) << ' ' << std::flush;
                 for (int i = 0; i < imageWidth; i++)
                 {
-                    SDL_Color pixelColor = {static_cast<Uint8>(double(i) / (imageWidth - 1) * 255), static_cast<Uint8>(double(j) / (imageHeight - 1) * 255), 0, 255};
+                    Vec3f pixelCenter = pixel00Loc + (i * pixelDeltaU) + (j * pixelDeltaV);
+                    Vec3f rayDirection = pixelCenter - cameraCenter;
+                    Ray r{cameraCenter, rayDirection};
+                    SDL_Color pixelColor = Ray::rayColor();
                     SDL_SetRenderDrawColor(image, pixelColor.r, pixelColor.g, pixelColor.b, pixelColor.a);
                     SDL_RenderDrawPoint(image, i, j);
                 }

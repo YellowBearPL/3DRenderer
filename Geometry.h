@@ -127,7 +127,7 @@ public:
 
     void lookat(const Vec3<T> &center, const Vec3<T> &up);
 
-    Vec3<T> operator/(const T &t) { return *this * 1 / t; }
+    Vec3<T> operator/(const T &t) { return *this * (1 / t); }
 
     Vec3<T> &operator/=(const T &t);
 

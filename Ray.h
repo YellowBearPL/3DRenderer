@@ -18,5 +18,7 @@ public:
     Ray(const Point &origin, const Vec3f &direction) : orig(origin), dir(direction) {}
 
     [[nodiscard]] Point at(double t) const { return orig + (t * dir); }
+
+    static SDL_Color rayColor() { return {0, 0, 0, 255}; }
 };
 #endif//INC_3DRENDERER_RAY_H
