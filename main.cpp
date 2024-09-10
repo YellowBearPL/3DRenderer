@@ -259,6 +259,7 @@ int main(int argc, char *argv[])
             SDL_RenderClear(image);
             for (int j = 0; j < imageHeight; j++)
             {
+                std::clog << "\rScanlines remaining: " << (imageHeight - j) << ' ' << std::flush;
                 for (int i = 0; i < imageWidth; i++)
                 {
                     auto r = double(i) / (imageWidth - 1);
@@ -271,6 +272,8 @@ int main(int argc, char *argv[])
                     SDL_RenderDrawPoint(image, i, j);
                 }
             }
+
+            std::clog << "\rDone.                 " << std::endl;
         }
 
         ImGui::End();
