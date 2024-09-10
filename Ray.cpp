@@ -17,6 +17,11 @@ SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2)
 
 SDL_Color Ray::rayColor()
 {
+    if (Point(0,0,-1).hitSphere(0.5, *this))
+    {
+        return {255, 0, 0, 255};
+    }
+
     Vec3f unitDirection = dir.unitVector();
     double a = 0.5 * (unitDirection.y + 1.0);
     return ((1.0 - a) * SDL_Color(255, 255, 255, 255)) + (a * SDL_Color(127, 178, 255, 255));

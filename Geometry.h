@@ -77,6 +77,8 @@ public:
 
 using Vec4f = Vec4<float>;
 
+class Ray;
+
 template<typename T>
 class Vec3
 {
@@ -138,6 +140,8 @@ public:
     T lengthSquared() const { return (x * x) + (y * y) + (z * z); }
 
     Vec3<T> unitVector() { return *this / length(); }
+
+    bool hitSphere(double radius, const Ray &r);
 };
 
 using Vec3f = Vec3<float>;
