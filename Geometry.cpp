@@ -71,7 +71,7 @@ T Vec2<T>::maxElevationAngle(const std::vector<T> &zbuffer, const Vec2<T> &dir)
     for (int t = 0; t < 1000; t += 1)
     {
         Vec2<T> cur = *this + (dir * t);
-        if (cur.u >= float(screenWidth) || cur.v >= float(screenHeight) || cur.u < 0 || cur.v < 0)
+        if (cur.u >= float(imageWidth) || cur.v >= float(imageHeight) || cur.u < 0 || cur.v < 0)
         {
             return maxangle;
         }
@@ -82,7 +82,7 @@ T Vec2<T>::maxElevationAngle(const std::vector<T> &zbuffer, const Vec2<T> &dir)
             continue;
         }
 
-        float elevation = zbuffer[int(cur.u) + (int(cur.v) * screenWidth)] - zbuffer[int(u) + int(v) * screenWidth];
+        float elevation = zbuffer[int(cur.u) + (int(cur.v) * imageWidth)] - zbuffer[int(u) + int(v) * imageWidth];
         maxangle = std::max(maxangle, atanf(elevation / distance));
     }
 

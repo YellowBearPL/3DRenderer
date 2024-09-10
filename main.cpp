@@ -2,7 +2,6 @@
 #include "Gl.h"
 #include "Model.h"
 #include "Ray.h"
-#include "Sphere.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl2.h"
 #include "imgui/imgui_impl_sdlrenderer2.h"
@@ -23,10 +22,10 @@
 #define V_MOVE 0.0
 
 std::unique_ptr<Model> model = nullptr;
-const int screenWidth = 1920;
-const int screenHeight = 1080;
-const float invWidth = 1 / float(screenWidth), invHeight = 1 / float(screenHeight);
-const float fov = 30, aspectratio = screenWidth / float(screenHeight);
+const int imageWidth = 1920;
+const int imageHeight = 1080;
+const float invWidth = 1 / float(imageWidth), invHeight = 1 / float(imageHeight);
+const float fov = 30, aspectratio = imageWidth / float(imageHeight);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
 Vec3f eye{1, 1, 3};
 Vec3f center{0, 0, 0};
@@ -89,8 +88,8 @@ std::array<Sprite, NUM_SPRITES> sprite =
                 {10.0, 15.1, 8},
                 {10.5, 15.8, 8},
         }};
-std::vector<Uint32> buffer(screenHeight * screenWidth);
-std::array<double, screenWidth> zBuffer;
+std::vector<Uint32> buffer(imageHeight *imageWidth);
+std::array<double, imageWidth> zBuffer;
 std::vector<int> spriteOrder(NUM_SPRITES);
 std::vector<double> spriteDistance(NUM_SPRITES);
 
@@ -181,11 +180,11 @@ int main(int argc, char *argv[])
     }
 
     eye.lookat(center, up);
-    viewport(screenWidth / 8, screenHeight / 8, screenWidth * 3 / 4, screenHeight * 3 / 4);
+    viewport(imageWidth / 8, imageHeight / 8, imageWidth * 3 / 4, imageHeight * 3 / 4);
     projection(-1.f / (eye - center).norm());
     std::vector<Vec4f> screenCoords(3);
-    std::vector<float> zbuffer(screenWidth * screenHeight);
-    for (int i = screenWidth * screenHeight; --i;)
+    std::vector<float> zbuffer(imageWidth * imageHeight);
+    for (int i = imageWidth * imageHeight; --i;)
     {
         zbuffer[i] = -std::numeric_limits<float>::max();
     }
@@ -204,8 +203,6 @@ int main(int argc, char *argv[])
         {
             error++;
         }
-
-        std::cout << texture[i]->format->format << std::endl;
     }
 
     for (int i = 0; i < 3; i++)
@@ -223,15 +220,15 @@ int main(int argc, char *argv[])
     }
 
     Uint8 *ptr;
-    SDL_Surface *srf = SDL_CreateRGBSurface(0, screenWidth, screenHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+    SDL_Surface *srf = SDL_CreateRGBSurface(0, imageWidth, imageHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     srf->pixels = buffer.data();
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(screenWidth, screenHeight, 0, &window, &image);
+    SDL_CreateWindowAndRenderer(imageWidth, imageHeight, 0, &window, &image);
     SDL_SetWindowTitle(window, "3D Renderer!");
-    SDL_Texture *frame = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, screenWidth, screenHeight);
+    SDL_Texture *frame = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, imageWidth, imageHeight);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
@@ -240,9 +237,7 @@ int main(int argc, char *argv[])
     ImGui::StyleColorsDark();
     ImGui_ImplSDL2_InitForSDLRenderer(window, image);
     ImGui_ImplSDLRenderer2_Init(image);
-    std::array<float, 4> sphere{0, 0, -30, 2}, fgColor{0, 1, 0, 1}, bgColor{.01, .01, .01, 1}, lp{0, 1, 0, 1};
-    bool glass = false, raycast = false;
-    float bias = 1e-4, index = 1.1;
+    bool raycast = false;
     while (true)
     {
         if (SDL_PollEvent(&event))
@@ -258,59 +253,21 @@ int main(int argc, char *argv[])
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
         ImGui::Begin("Ray Tracing!");
-        if (ImGui::CollapsingHeader("Objects"))
-        {
-            for (auto k = Ray::objects.begin(); k != Ray::objects.end();)
-            {
-                if (ImGui::ColorButton(("Delete" + std::to_string(k - Ray::objects.begin())).c_str(), {float(k->get()->color.r) / 255, float(k->get()->color.g) / 255, float(k->get()->color.b) / 255, float(k->get()->color.a) / 255}))
-                {
-                    Ray::objects.erase(k);
-                }
-                else
-                {
-                    k++;
-                }
-            }
-
-            ImGui::InputFloat3("Center", sphere.data());
-            ImGui::InputFloat("Radius", sphere.data() + 3);
-            ImGui::ColorPicker4("Color", fgColor.data());
-            ImGui::Checkbox("Glass?", &glass);
-            if (glass)
-            {
-                ImGui::InputFloat("index", &index);
-            }
-
-            if (ImGui::Button("Add sphere"))
-            {
-                Ray::objects.push_back(std::make_shared<Sphere>(Point(sphere[0], sphere[1], sphere[2]), sphere[3], SDL_Color(static_cast<Uint8>(fgColor[0] * 255), static_cast<Uint8>(fgColor[1] * 255), static_cast<Uint8>(fgColor[2] * 255), static_cast<Uint8>(fgColor[3] * 255)), glass, index));
-            }
-        }
-
-        ImGui::ColorPicker4("Background color", bgColor.data());
-        ImGui::InputFloat("Bias", &bias, 0.0f, 0.0f, "%.4f");
-        if (ImGui::CollapsingHeader("Light"))
-        {
-            ImGui::InputFloat3("Position", lp.data());
-            ImGui::SliderFloat("Brightness", lp.data() + 3, 0, 1);
-        }
-
         if (ImGui::Button("Render"))
         {
-            Ray::backgroundColor = {static_cast<Uint8>(bgColor[0] * 255), static_cast<Uint8>(bgColor[1] * 255), static_cast<Uint8>(bgColor[2] * 255), static_cast<Uint8>(bgColor[3] * 255)};
-            Ray::bias = bias;
-            Ray::lightPosition = {lp[0], lp[1], lp[2]};
-            Ray::light.brightness = lp[3];
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
-            for (int j = 0; j < screenHeight; j++)
+            for (int j = 0; j < imageHeight; j++)
             {
-                for (int i = 0; i < screenWidth; i++)
+                for (int i = 0; i < imageWidth; i++)
                 {
-                    Ray primRay;
-                    primRay.computePrimRay(i, j);
-                    color = primRay.trace(0);
-                    SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
+                    auto r = double(i) / (imageWidth - 1);
+                    auto g = double(j) / (imageHeight - 1);
+                    double b = 0.0;
+                    int ir = int(255.999 * r);
+                    int ig = int(255.999 * g);
+                    int ib = int(255.999 * b);
+                    SDL_SetRenderDrawColor(image, ir, ig, ib, 255);
                     SDL_RenderDrawPoint(image, i, j);
                 }
             }
@@ -333,11 +290,11 @@ int main(int argc, char *argv[])
                 zshader.triangle(zshader.varyingTri, image, zbuffer);
             }
 
-            for (int x = 0; x < screenWidth; x++)
+            for (int x = 0; x < imageWidth; x++)
             {
-                for (int y = 0; y < screenHeight; y++)
+                for (int y = 0; y < imageHeight; y++)
                 {
-                    if (zbuffer[x + (y * screenWidth)] < -1e5)
+                    if (zbuffer[x + (y * imageWidth)] < -1e5)
                     {
                         continue;
                     }
@@ -366,20 +323,20 @@ int main(int argc, char *argv[])
         {
             SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
             SDL_RenderClear(image);
-            for(int y = 0; y < screenHeight; y++)
+            for(int y = 0; y < imageHeight; y++)
             {
                 auto rayDirX0 = float(dirX - planeX);
                 auto rayDirY0 = float(dirY - planeY);
                 auto rayDirX1 = float(dirX + planeX);
                 auto rayDirY1 = float(dirY + planeY);
-                int p = y - (screenHeight / 2);
-                float posZ = 0.5 * screenHeight;
+                int p = y - (imageHeight / 2);
+                float posZ = 0.5 * imageHeight;
                 float rowDistance = posZ / float(p);
-                float floorStepX = rowDistance * (rayDirX1 - rayDirX0) / screenWidth;
-                float floorStepY = rowDistance * (rayDirY1 - rayDirY0) / screenWidth;
+                float floorStepX = rowDistance * (rayDirX1 - rayDirX0) / imageWidth;
+                float floorStepY = rowDistance * (rayDirY1 - rayDirY0) / imageWidth;
                 auto floorX = float(posX) + (rowDistance * rayDirX0);
                 auto floorY = float(posY) + (rowDistance * rayDirY0);
-                for (int x = 0; x < screenWidth; x++)
+                for (int x = 0; x < imageWidth; x++)
                 {
                     int cellX = int(floorX);
                     int cellY = int(floorY);
@@ -393,17 +350,17 @@ int main(int argc, char *argv[])
                     ptr = (Uint8 *)texture[floorTexture]->pixels + (ty * texture[floorTexture]->pitch) + (tx * 3);
                     uColor = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
                     uColor = (uColor >> 1) & 8355711;
-                    buffer[(screenWidth * y) + x] = uColor;
+                    buffer[(imageWidth * y) + x] = uColor;
                     ptr = (Uint8 *)texture[ceilingTexture]->pixels + (ty * texture[ceilingTexture]->pitch) + (tx * 3);
                     uColor = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
                     uColor = (uColor >> 1) & 8355711;
-                    buffer[screenWidth * (screenHeight - y - 1) + x] = uColor;
+                    buffer[imageWidth * (imageHeight - y - 1) + x] = uColor;
                 }
             }
 
-            for (int x = 0; x < screenWidth; x++)
+            for (int x = 0; x < imageWidth; x++)
             {
-                double cameraX = (2 * x / double(screenWidth)) - 1;
+                double cameraX = (2 * x / double(imageWidth)) - 1;
                 double rayDirX = dirX + (planeX * cameraX);
                 double rayDirY = dirY + (planeY * cameraX);
                 auto mapX = int(posX);
@@ -469,17 +426,17 @@ int main(int argc, char *argv[])
                     perpWallDist = (sideDistY - deltaDistY);
                 }
 
-                auto lineHeight = int(screenHeight / perpWallDist);
-                int drawStart = (-lineHeight / 2) + (screenHeight / 2);
+                auto lineHeight = int(imageHeight / perpWallDist);
+                int drawStart = (-lineHeight / 2) + (imageHeight / 2);
                 if (drawStart < 0)
                 {
                     drawStart = 0;
                 }
 
-                int drawEnd = (lineHeight / 2) + (screenHeight / 2);
-                if (drawEnd >= screenHeight)
+                int drawEnd = (lineHeight / 2) + (imageHeight / 2);
+                if (drawEnd >= imageHeight)
                 {
-                    drawEnd = screenHeight - 1;
+                    drawEnd = imageHeight - 1;
                 }
 
                 int texNum = worldMap[mapX][mapY] - 1;
@@ -506,7 +463,7 @@ int main(int argc, char *argv[])
                 }
 
                 double step = 1.0 * TEX_HEIGHT / lineHeight;
-                double texPos = (drawStart - (screenHeight / 2.) + (lineHeight / 2.)) * step;
+                double texPos = (drawStart - (imageHeight / 2.) + (lineHeight / 2.)) * step;
                 for (int y = drawStart; y < drawEnd; y++)
                 {
                     auto texY = int(texPos) & (TEX_HEIGHT - 1);
@@ -518,7 +475,7 @@ int main(int argc, char *argv[])
                         uColor = (uColor >> 1) & 8355711;
                     }
 
-                    buffer[(screenWidth * y) + x] = uColor;
+                    buffer[(imageWidth * y) + x] = uColor;
                 }
 
                 zBuffer[x] = perpWallDist;
@@ -539,22 +496,22 @@ int main(int argc, char *argv[])
                 double invDet = 1.0 / ((planeX * dirY) - (dirX * planeY));
                 double transformX = invDet * ((dirY * spriteX) - (dirX * spriteY));
                 double transformY = invDet * ((-planeY * spriteX) + (planeX * spriteY));
-                auto spriteScreenX = int((screenWidth / 2.) * (1 + (transformX / transformY)));
+                auto spriteScreenX = int((imageWidth / 2.) * (1 + (transformX / transformY)));
                 auto vMoveScreen = int(V_MOVE / transformY);
-                int spriteHeight = abs(int(screenHeight / (transformY))) / V_DIV;
-                int drawStartY = (-spriteHeight / 2) + (screenHeight / 2) + vMoveScreen;
+                int spriteHeight = abs(int(imageHeight / (transformY))) / V_DIV;
+                int drawStartY = (-spriteHeight / 2) + (imageHeight / 2) + vMoveScreen;
                 if (drawStartY < 0)
                 {
                     drawStartY = 0;
                 }
 
-                int drawEndY = (spriteHeight / 2) + (screenHeight / 2) + vMoveScreen;
-                if (drawEndY >= screenHeight)
+                int drawEndY = (spriteHeight / 2) + (imageHeight / 2) + vMoveScreen;
+                if (drawEndY >= imageHeight)
                 {
-                    drawEndY = screenHeight - 1;
+                    drawEndY = imageHeight - 1;
                 }
 
-                int spriteWidth = abs(int(screenHeight / (transformY))) / U_DIV;
+                int spriteWidth = abs(int(imageHeight / (transformY))) / U_DIV;
                 int drawStartX = (-spriteWidth / 2) + spriteScreenX;
                 if (drawStartX < 0)
                 {
@@ -562,24 +519,24 @@ int main(int argc, char *argv[])
                 }
 
                 int drawEndX = (spriteWidth / 2) + spriteScreenX;
-                if (drawEndX >= screenWidth)
+                if (drawEndX >= imageWidth)
                 {
-                    drawEndX = screenWidth - 1;
+                    drawEndX = imageWidth - 1;
                 }
 
                 for (int stripe = drawStartX; stripe < drawEndX; stripe++)
                 {
                     auto texX = int(256 * (stripe - ((-spriteWidth / 2) + spriteScreenX)) * TEX_WIDTH / spriteWidth) / 256;
-                    if (transformY > 0 && stripe > 0 && stripe < screenWidth && transformY < zBuffer[stripe])
+                    if (transformY > 0 && stripe > 0 && stripe < imageWidth && transformY < zBuffer[stripe])
                         for (int y = drawStartY; y < drawEndY; y++)
                         {
-                            int d = ((y - vMoveScreen) * 256) - (screenHeight * 128) + (spriteHeight * 128);
+                            int d = ((y - vMoveScreen) * 256) - (imageHeight * 128) + (spriteHeight * 128);
                             int texY = ((d * TEX_HEIGHT) / spriteHeight) / 256;
                             ptr = (Uint8 *)texture[sprite[spriteOrder[i]].texture]->pixels + (texY * texture[sprite[spriteOrder[i]].texture]->pitch) + (texX * 3);
                             Uint32 uColor = ptr[0] | ptr[1] << 8 | ptr[2] << 16;
                             if ((uColor & 0x00FFFFFF) != 0)
                             {
-                                buffer[(screenWidth * y) + stripe] = rgbToInt(((SDL_Color(255, 255, 255, 255) - intToRgb(buffer[(screenWidth * y) + stripe])) / 2) + (intToRgb(uColor) / 2));
+                                buffer[(imageWidth * y) + stripe] = rgbToInt(((SDL_Color(255, 255, 255, 255) - intToRgb(buffer[(imageWidth * y) + stripe])) / 2) + (intToRgb(uColor) / 2));
                             }
                         }
                 }
@@ -587,11 +544,11 @@ int main(int argc, char *argv[])
 
             SDL_UpdateTexture(frame, nullptr, srf->pixels, srf->pitch);
             SDL_RenderCopy(image, frame, nullptr, nullptr);
-            for (int y = 0; y < screenHeight; y++)
+            for (int y = 0; y < imageHeight; y++)
             {
-                for (int x = 0; x < screenWidth; x++)
+                for (int x = 0; x < imageWidth; x++)
                 {
-                    buffer[(screenWidth * y) + x] = 0;
+                    buffer[(imageWidth * y) + x] = 0;
                 }
             }
 

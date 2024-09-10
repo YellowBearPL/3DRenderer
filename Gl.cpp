@@ -33,7 +33,7 @@ void Shader::triangle(Mat43<float> &clipc, SDL_Renderer *image, std::vector<floa
 
     Vec2f bboxmin{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
     Vec2f bboxmax{-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max()};
-    Vec2f clamp{static_cast<float>(screenWidth - 1), static_cast<float>(screenHeight - 1)};
+    Vec2f clamp{static_cast<float>(imageWidth - 1), static_cast<float>(imageHeight - 1)};
     for (int i = 0; i < 3; i++)
     {
         bboxmin.u = std::max(0.f, std::min(bboxmin.u, pts2[i].u));
@@ -52,7 +52,7 @@ void Shader::triangle(Mat43<float> &clipc, SDL_Renderer *image, std::vector<floa
             Vec3f bcClip{bcScreen.x / pts[0][3], bcScreen.y / pts[1][3], bcScreen.z / pts[2][3]};
             bcClip /= bcClip.x + bcClip.y + bcClip.z;
             float fragDepth = clipc[2] * bcClip;
-            if (bcScreen.x < 0 || bcScreen.y < 0 || bcScreen.z < 0 || zbuffer[p.u + (p.v * screenWidth)] > fragDepth)
+            if (bcScreen.x < 0 || bcScreen.y < 0 || bcScreen.z < 0 || zbuffer[p.u + (p.v * imageWidth)] > fragDepth)
             {
                 continue;
             }
@@ -60,7 +60,7 @@ void Shader::triangle(Mat43<float> &clipc, SDL_Renderer *image, std::vector<floa
             bool discard = fragment({static_cast<float>(p.u), static_cast<float>(p.v), fragDepth}, bcClip, color);
             if (!discard)
             {
-                zbuffer[p.u + (p.v * screenWidth)] = fragDepth;
+                zbuffer[p.u + (p.v * imageWidth)] = fragDepth;
                 SDL_SetRenderDrawColor(image, color.r, color.g, color.b, color.a);
                 SDL_RenderDrawPoint(image, p.u, p.v);
             }

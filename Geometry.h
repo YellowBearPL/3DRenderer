@@ -18,8 +18,8 @@ class Mat22;
 template<typename T>
 class Vec3;
 
-extern const int screenWidth;
-extern const int screenHeight;
+extern const int imageWidth;
+extern const int imageHeight;
 
 template<typename T>
 class Vec2
