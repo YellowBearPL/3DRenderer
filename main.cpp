@@ -262,13 +262,8 @@ int main(int argc, char *argv[])
                 std::clog << "\rScanlines remaining: " << (imageHeight - j) << ' ' << std::flush;
                 for (int i = 0; i < imageWidth; i++)
                 {
-                    auto r = double(i) / (imageWidth - 1);
-                    auto g = double(j) / (imageHeight - 1);
-                    double b = 0.0;
-                    int ir = int(255.999 * r);
-                    int ig = int(255.999 * g);
-                    int ib = int(255.999 * b);
-                    SDL_SetRenderDrawColor(image, ir, ig, ib, 255);
+                    SDL_Color pixelColor = {static_cast<Uint8>(double(i) / (imageWidth - 1) * 255), static_cast<Uint8>(double(j) / (imageHeight - 1) * 255), 0, 255};
+                    SDL_SetRenderDrawColor(image, pixelColor.r, pixelColor.g, pixelColor.b, pixelColor.a);
                     SDL_RenderDrawPoint(image, i, j);
                 }
             }
