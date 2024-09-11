@@ -10,6 +10,6 @@ public:
 private:
     void initialize();
 
-    SDL_Color rayColor(const Ray &r, const Hittable &world) const;
+    static SDL_Color rayColor(const Ray &r, const Hittable &world);
 };
 #endif//INC_3DRENDERER_CAMERA_H

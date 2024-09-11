@@ -127,7 +127,7 @@ public:
 
     void lookat(const Vec3<T> &center, const Vec3<T> &up);
 
-    Vec3<T> operator/(const T &t) { return *this * (1 / t); }
+    Vec3<T> operator/(const T &t) const { return *this * (1 / t); }
 
     Vec3<T> &operator/=(const T &t);
 
@@ -137,7 +137,7 @@ public:
 
     T lengthSquared() const { return (x * x) + (y * y) + (z * z); }
 
-    Vec3<T> unitVector() { return *this / length(); }
+    Vec3<T> unitVector() const { return *this / length(); }
 };
 
 using Vec3f = Vec3<float>;
