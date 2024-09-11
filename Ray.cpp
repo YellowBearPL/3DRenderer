@@ -20,7 +20,7 @@ SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2)
 SDL_Color Ray::rayColor(const Hittable &world)
 {
     HitRecord rec;
-    if (world.hit(*this, 0, infinity, rec))
+    if (world.hit(*this, {0, infinity}, rec))
     {
         return {static_cast<Uint8>((rec.normal.x + 1) * 127.5), static_cast<Uint8>((rec.normal.y + 1) * 127.5), static_cast<Uint8>((rec.normal.z + 1) * 127.5), 255};
     }
