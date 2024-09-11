@@ -1,31 +1,31 @@
 #include "Sphere.h"
-#include <cmath>
 #include "Ray.h"
 
-bool Sphere::intersect(const Ray &ray, Point &point, Normal &normal) const
+bool Sphere::hit(const Ray &r, double rayTmin, double rayTmax, HitRecord &rec) const
 {
-    Vec3f l = center - ray.orig;
-    float tca = l.dot(ray.dir);
-    if (tca < 0)
+    Vec3f oc = center - r.orig;
+    float a = r.dir.lengthSquared();
+    float h = r.dir.dot(oc);
+    double c = oc.lengthSquared() - (radius * radius);
+    double discriminant = (h * h) - (a * c);
+    if (discriminant < 0)
     {
         return false;
     }
 
-    float d2 = l.dot(l) - (tca * tca);
-    if (d2 > radius2)
+    double sqrtd = std::sqrt(discriminant);
+    double root = (h - sqrtd) / a;
+    if (root <= rayTmin || rayTmax <= root)
     {
-        return false;
+        root = (h + sqrtd) / a;
+        if (root <= rayTmin || rayTmax <= root)
+        {
+            return false;
+        }
     }
 
-    float thc = std::sqrt(radius2 - d2);
-    float t = tca - thc;
-    if (t < 0)
-    {
-        t = tca + thc;
-    }
-
-    point = ray.orig + ray.dir * t;
-    normal = point - center;
-    normal.normalize();
+    rec.t = root;
+    rec.p = r.at(rec.t);
+    rec.normal = (rec.p - center) / float(radius);
     return true;
 }

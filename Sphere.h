@@ -1,15 +1,16 @@
 #ifndef INC_3DRENDERER_SPHERE_H
 #define INC_3DRENDERER_SPHERE_H
-#include "Object.h"
+#include "Hittable.h"
 
-class Sphere : public Object
+class Sphere : public Hittable
 {
 public:
+    Sphere(const Point &center, double radius) : center(center), radius(std::fmax(0, radius)) {}
+
+    bool hit(const Ray &r, double rayTmin, double rayTmax, HitRecord &rec) const override;
+
+private:
     Point center;
-    float radius, radius2;
-
-    Sphere(const Point &c, const float &r, const SDL_Color &sc, bool glass, float i) : center(c), radius(r), radius2(r * r) { color = sc; isGlass = glass; indexOfRefraction = i; }
-
-    bool intersect(const Ray &ray, Point &point, Normal &normal) const override;
+    double radius;
 };
 #endif//INC_3DRENDERER_SPHERE_H

@@ -7,7 +7,6 @@ add_definitions(-DSDL_MAIN_HANDLED)
 add_executable(3DRenderer main.cpp
         Ray.cpp
         Ray.h
-        Object.h
         Sphere.cpp
         Sphere.h
         Light.cpp

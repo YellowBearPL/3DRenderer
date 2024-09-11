@@ -1,7 +1,6 @@
 #ifndef INC_3DRENDERER_RAY_H
 #define INC_3DRENDERER_RAY_H
 #include "Light.h"
-#include "Object.h"
 #include "SDL2/SDL.h"
 #include "Geometry.h"
 #include <memory>
