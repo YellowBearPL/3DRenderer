@@ -8,8 +8,9 @@ public:
     Point p;
     Vec3f normal;
     double t{};
+    bool frontFace{};
 
-    void setFaceNormal(const Ray &r, const Vec3f &outwardNormal) { Vec3f rayDirection = r.dir; bool frontFace; if (rayDirection.dot(outwardNormal) > 0.0) { normal = -outwardNormal; frontFace = false; } else { normal = outwardNormal; frontFace = true; }}
+    void setFaceNormal(const Ray &r, const Vec3f &outwardNormal) { frontFace = r.dir.dot(outwardNormal) < 0; normal = frontFace ? outwardNormal : -outwardNormal; }
 };
 
 class Hittable
