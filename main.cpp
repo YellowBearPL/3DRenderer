@@ -1,3 +1,4 @@
+#include "Camera.h"
 #include "Geometry.h"
 #include "Gl.h"
 #include "HittableList.h"
@@ -234,20 +235,19 @@ int main(int argc, char *argv[])
     Vec3f viewportUpperLeft = cameraCenter - Vec3f(0, 0, focalLength) - (viewportU / 2) - (viewportV / 2);
     Vec3f pixel00Loc = viewportUpperLeft + (0.5f * (pixelDeltaU + pixelDeltaV));
     SDL_Event event;
-    SDL_Renderer *image;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer(imageWidth, imageHeight, 0, &window, &image);
+    SDL_CreateWindowAndRenderer(imageWidth, imageHeight, 0, &window, &Camera::image);
     SDL_SetWindowTitle(window, "3D Renderer!");
-    SDL_Texture *frame = SDL_CreateTexture(image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, imageWidth, imageHeight);
+    SDL_Texture *frame = SDL_CreateTexture(Camera::image, SDL_GetWindowPixelFormat(window), SDL_TEXTUREACCESS_TARGET, imageWidth, imageHeight);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
     ImGui::StyleColorsDark();
-    ImGui_ImplSDL2_InitForSDLRenderer(window, image);
-    ImGui_ImplSDLRenderer2_Init(image);
+    ImGui_ImplSDL2_InitForSDLRenderer(window, Camera::image);
+    ImGui_ImplSDLRenderer2_Init(Camera::image);
     bool raycast = false;
     while (true)
     {
@@ -266,8 +266,8 @@ int main(int argc, char *argv[])
         ImGui::Begin("Ray Tracing!");
         if (ImGui::Button("Render"))
         {
-            SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
-            SDL_RenderClear(image);
+            SDL_SetRenderDrawColor(Camera::image, 0, 0, 0, 0);
+            SDL_RenderClear(Camera::image);
             for (int j = 0; j < imageHeight; j++)
             {
                 std::clog << "\rScanlines remaining: " << (imageHeight - j) << ' ' << std::flush;
@@ -277,8 +277,8 @@ int main(int argc, char *argv[])
                     Vec3f rayDirection = pixelCenter - cameraCenter;
                     Ray r{cameraCenter, rayDirection};
                     SDL_Color pixelColor = r.rayColor(world);
-                    SDL_SetRenderDrawColor(image, pixelColor.r, pixelColor.g, pixelColor.b, pixelColor.a);
-                    SDL_RenderDrawPoint(image, i, j);
+                    SDL_SetRenderDrawColor(Camera::image, pixelColor.r, pixelColor.g, pixelColor.b, pixelColor.a);
+                    SDL_RenderDrawPoint(Camera::image, i, j);
                 }
             }
 
@@ -289,9 +289,9 @@ int main(int argc, char *argv[])
         ImGui::Begin("Rasterization!");
         if (ImGui::Button("Render"))
         {
-            SDL_SetRenderTarget(image, frame);
-            SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
-            SDL_RenderClear(image);
+            SDL_SetRenderTarget(Camera::image, frame);
+            SDL_SetRenderDrawColor(Camera::image, 0, 0, 0, 0);
+            SDL_RenderClear(Camera::image);
             for (int i = 0; i < model->nfaces(); i++)
             {
                 for (int j = 0; j < 3; j++)
@@ -299,7 +299,7 @@ int main(int argc, char *argv[])
                     zshader.vertex(i, j);
                 }
 
-                zshader.triangle(zshader.varyingTri, image, zbuffer);
+                zshader.triangle(zshader.varyingTri, Camera::image, zbuffer);
             }
 
             for (int x = 0; x < imageWidth; x++)
@@ -319,13 +319,13 @@ int main(int argc, char *argv[])
 
                     total /= (M_PI / 2) * 8;
                     total = std::pow(total, 100.f);
-                    SDL_SetRenderDrawColor(image, Uint8(total * 255), Uint8(total * 255), Uint8(total * 255), 255);
-                    SDL_RenderDrawPoint(image, x, y);
+                    SDL_SetRenderDrawColor(Camera::image, Uint8(total * 255), Uint8(total * 255), Uint8(total * 255), 255);
+                    SDL_RenderDrawPoint(Camera::image, x, y);
                 }
             }
 
-            SDL_SetRenderTarget(image, nullptr);
-            SDL_RenderCopyEx(image, frame, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
+            SDL_SetRenderTarget(Camera::image, nullptr);
+            SDL_RenderCopyEx(Camera::image, frame, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }
 
         ImGui::End();
@@ -333,8 +333,8 @@ int main(int argc, char *argv[])
         ImGui::Checkbox("Render", &raycast);
         if (raycast)
         {
-            SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
-            SDL_RenderClear(image);
+            SDL_SetRenderDrawColor(Camera::image, 0, 0, 0, 0);
+            SDL_RenderClear(Camera::image);
             for(int y = 0; y < imageHeight; y++)
             {
                 auto rayDirX0 = float(dirX - planeX);
@@ -555,7 +555,7 @@ int main(int argc, char *argv[])
             }
 
             SDL_UpdateTexture(frame, nullptr, srf->pixels, srf->pitch);
-            SDL_RenderCopy(image, frame, nullptr, nullptr);
+            SDL_RenderCopy(Camera::image, frame, nullptr, nullptr);
             for (int y = 0; y < imageHeight; y++)
             {
                 for (int x = 0; x < imageWidth; x++)
@@ -567,8 +567,8 @@ int main(int argc, char *argv[])
             oldTime = time;
             time = double(SDL_GetTicks64());
             double frameTime = (time - oldTime) / 1000.0;
-            SDL_SetRenderDrawColor(image, 255, 255, 255, 255);
-            SDLTest_DrawString(image, 0, 0, std::to_string(1.0 / frameTime).c_str());
+            SDL_SetRenderDrawColor(Camera::image, 255, 255, 255, 255);
+            SDLTest_DrawString(Camera::image, 0, 0, std::to_string(1.0 / frameTime).c_str());
             double moveSpeed = frameTime * 5.0;
             double rotSpeed = frameTime * 3.0;
             const Uint8* keystate = SDL_GetKeyboardState(nullptr);
@@ -621,11 +621,11 @@ int main(int argc, char *argv[])
 
         ImGui::End();
         ImGui::Render();
-        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), image);
-        SDL_RenderPresent(image);
+        ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), Camera::image);
+        SDL_RenderPresent(Camera::image);
     }
 
-    SDL_DestroyRenderer(image);
+    SDL_DestroyRenderer(Camera::image);
     SDL_DestroyWindow(window);
     SDL_Quit();
     return 0;
