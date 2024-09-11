@@ -2,6 +2,7 @@
 #include "Gl.h"
 #include "Model.h"
 #include "Ray.h"
+#include "Sphere.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_sdl2.h"
 #include "imgui/imgui_impl_sdlrenderer2.h"
@@ -228,6 +229,9 @@ int main(int argc, char *argv[])
     Vec3f pixelDeltaV = viewportV / imageHeight;
     Vec3f viewportUpperLeft = cameraCenter - Vec3f(0, 0, focalLength) - (viewportU / 2) - (viewportV / 2);
     Vec3f pixel00Loc = viewportUpperLeft + (0.5 * (pixelDeltaU + pixelDeltaV));
+    std::shared_ptr<double> doublePtr = std::make_shared<double>(0.37);
+    std::shared_ptr<Vec3f> vec3Ptr = std::make_shared<Vec3f>(1.414214, 2.718281, 1.618034);
+    std::shared_ptr<Sphere> spherePtr = std::make_shared<Sphere>(Point(0, 0, 0), 1.0);
     SDL_Event event;
     SDL_Renderer *image;
     SDL_Window *window;
