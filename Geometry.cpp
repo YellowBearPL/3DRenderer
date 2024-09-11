@@ -216,6 +216,20 @@ double Vec3<T>::hitSphere(double radius, Ray const &r)
     return (h - std::sqrt(discriminant)) / a;
 }
 
+
+
+template<typename T>
+std::ostream& operator<<(std::ostream& out, const Vec3<T> &v)
+{
+    return out << v.e[0] << ' ' << v.e[1] << ' ' << v.e[2];
+}
+
+template<typename T>
+Vec3<T> operator*(double t, const Vec3<T> &v)
+{
+    return v * t;
+}
+
 template<typename T>
 T Dt2<T>::det(Mat22<T> const &src)
 {

@@ -35,6 +35,8 @@ add_executable(3DRenderer main.cpp
         Hittable.h
         HittableList.cpp
         HittableList.h
+        Rt.cpp
+        Rt.h
 )
 
 target_link_libraries(3DRenderer SDL2_test SDL2)
