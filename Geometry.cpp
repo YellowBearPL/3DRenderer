@@ -1,5 +1,4 @@
 #include "Geometry.h"
-#include "Ray.h"
 
 extern Matrix modelView;
 
@@ -198,36 +197,6 @@ Vec3<T> &Vec3<T>::operator/=(T const &t)
 {
     *this = *this / t;
     return *this;
-}
-
-template<typename T>
-double Vec3<T>::hitSphere(double radius, Ray const &r)
-{
-    Vec3<T> oc = *this - r.orig;
-    T a = r.dir.lengthSquared();
-    T h = r.dir.dot(oc);
-    T c = oc.lengthSquared() - (radius * radius);
-    T discriminant = (h * h) - (a * c);
-    if (discriminant < 0)
-    {
-        return -1.0;
-    }
-
-    return (h - std::sqrt(discriminant)) / a;
-}
-
-
-
-template<typename T>
-std::ostream& operator<<(std::ostream& out, const Vec3<T> &v)
-{
-    return out << v.e[0] << ' ' << v.e[1] << ' ' << v.e[2];
-}
-
-template<typename T>
-Vec3<T> operator*(double t, const Vec3<T> &v)
-{
-    return v * t;
 }
 
 template<typename T>

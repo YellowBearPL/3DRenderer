@@ -77,8 +77,6 @@ public:
 
 using Vec4f = Vec4<float>;
 
-class Ray;
-
 template<typename T>
 class Vec3
 {
@@ -140,8 +138,6 @@ public:
     T lengthSquared() const { return (x * x) + (y * y) + (z * z); }
 
     Vec3<T> unitVector() { return *this / length(); }
-
-    double hitSphere(double radius, const Ray &r);
 };
 
 using Vec3f = Vec3<float>;
@@ -150,10 +146,10 @@ using Normal = Vec3f;
 using Vec3i = Vec3<int>;
 
 template<typename T>
-std::ostream& operator<<(std::ostream& out, const Vec3<T> &v);
+std::ostream& operator<<(std::ostream& out, const Vec3<T> &v) { return out << v.e[0] << ' ' << v.e[1] << ' ' << v.e[2]; }
 
 template<typename T>
-Vec3<T> operator*(double t, const Vec3<T> &v);
+Vec3<T> operator*(T t, const Vec3<T> &v) { return v * t; }
 
 template<typename T>
 class Dt2

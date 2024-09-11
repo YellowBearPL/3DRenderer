@@ -1,4 +1,6 @@
 #include "Ray.h"
+#include "Hittable.h"
+#include "Rt.h"
 
 SDL_Color operator*(const SDL_Color &color, const double &f)
 {
@@ -15,13 +17,12 @@ SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2)
     return {static_cast<Uint8>(v1.r + v2.r), static_cast<Uint8>(v1.g + v2.g), static_cast<Uint8>(v1.b + v2.b), static_cast<Uint8>(v1.a + v2.a)};
 }
 
-SDL_Color Ray::rayColor()
+SDL_Color Ray::rayColor(const Hittable &world)
 {
-    auto t = Point(0,0,-1).hitSphere(0.5, *this);
-    if (t > 0.0)
+    HitRecord rec;
+    if (world.hit(*this, 0, infinity, rec))
     {
-        Vec3f n = (at(t) - Vec3f(0, 0, -1)).unitVector();
-        return SDL_Color(Uint8((n.x + 1) * 127.5), Uint8((n.y + 1) * 127.5), Uint8((n.z + 1) * 127.5), 255);
+        return {static_cast<Uint8>((rec.normal.x + 1) * 127.5), static_cast<Uint8>((rec.normal.y + 1) * 127.5), static_cast<Uint8>((rec.normal.z + 1) * 127.5), 255};
     }
 
     Vec3f unitDirection = dir.unitVector();
