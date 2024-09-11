@@ -1,5 +1,6 @@
 #ifndef INC_3DRENDERER_HITTABLE_H
 #define INC_3DRENDERER_HITTABLE_H
+#include "Interval.h"
 #include "Ray.h"
 
 class HitRecord
@@ -18,6 +19,6 @@ class Hittable
 public:
     virtual ~Hittable() = default;
 
-    virtual bool hit(const Ray &r, double rayTmin, double rayTmax, HitRecord &rec) const = 0;
+    virtual bool hit(const Ray &r, const Interval &rayT, HitRecord& rec) const = 0;
 };
 #endif//INC_3DRENDERER_HITTABLE_H
