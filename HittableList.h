@@ -15,6 +15,6 @@ public:
 
     void add(const std::shared_ptr<Hittable>& object) { objects.push_back(object); }
 
-    bool hit(const Ray &r, double rayTmin, double rayTmax, HitRecord &rec) const override;
+    bool hit(const Ray &r, const Interval &rayT, HitRecord &rec) const override;
 };
 #endif//INC_3DRENDERER_HITTABLELIST_H
