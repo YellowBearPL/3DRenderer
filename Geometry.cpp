@@ -204,16 +204,16 @@ template<typename T>
 double Vec3<T>::hitSphere(double radius, Ray const &r)
 {
     Vec3<T> oc = *this - r.orig;
-    float a = r.dir.dot(r.dir);
-    double b = -2.0 * r.dir.dot(oc);
-    double c = oc.dot(oc) - (radius * radius);
-    double discriminant = (b * b) - (4 * a * c);
+    T a = r.dir.lengthSquared();
+    T h = r.dir.dot(oc);
+    T c = oc.lengthSquared() - (radius * radius);
+    T discriminant = (h * h) - (a * c);
     if (discriminant < 0)
     {
         return -1.0;
     }
 
-    return (-b - std::sqrt(discriminant)) / (2.0 * a);
+    return (h - std::sqrt(discriminant)) / a;
 }
 
 template<typename T>
