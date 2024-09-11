@@ -7,7 +7,7 @@ class Sphere : public Hittable
 public:
     Sphere(const Point &center, double radius) : center(center), radius(std::fmax(0, radius)) {}
 
-    bool hit(const Ray &r, double rayTmin, double rayTmax, HitRecord &rec) const override;
+    bool hit(const Ray &r, const Interval &rayT, HitRecord &rec) const override;
 
 private:
     Point center;

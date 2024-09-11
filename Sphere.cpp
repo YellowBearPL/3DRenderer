@@ -1,6 +1,6 @@
 #include "Sphere.h"
 
-bool Sphere::hit(const Ray &r, double rayTmin, double rayTmax, HitRecord &rec) const
+bool Sphere::hit(const Ray &r, const Interval &rayT, HitRecord &rec) const
 {
     Vec3f oc = center - r.orig;
     float a = r.dir.lengthSquared();
@@ -14,10 +14,10 @@ bool Sphere::hit(const Ray &r, double rayTmin, double rayTmax, HitRecord &rec) c
 
     double sqrtd = std::sqrt(discriminant);
     double root = (h - sqrtd) / a;
-    if (root <= rayTmin || rayTmax <= root)
+    if (!rayT.surrounds(root))
     {
         root = (h + sqrtd) / a;
-        if (root <= rayTmin || rayTmax <= root)
+        if (!rayT.surrounds(root))
         {
             return false;
         }
