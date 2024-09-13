@@ -6,6 +6,7 @@
 #include <cmath>
 #include <ostream>
 #include <vector>
+#include "Rt.h"
 
 template<typename T>
 class Mat44;
@@ -136,6 +137,10 @@ public:
     T length() const { return std::sqrt(lengthSquared()); }
 
     T lengthSquared() const { return (x * x) + (y * y) + (z * z); }
+
+    static Vec3<T> random() { return {randomDouble(), randomDouble(), randomDouble()}; }
+
+    static Vec3<T> random(double min, double max) { return {randomDouble(min, max), randomDouble(min, max), randomDouble(min, max)}; }
 
     Vec3<T> unitVector() const { return *this / length(); }
 };
