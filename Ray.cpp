@@ -1,6 +1,4 @@
 #include "Ray.h"
-#include "Hittable.h"
-#include "Rt.h"
 
 SDL_Color operator*(const SDL_Color &color, const double &f)
 {
@@ -12,7 +10,7 @@ SDL_Color operator*(const double &f, const SDL_Color &color)
     return color * f;
 }
 
-SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2)
+SDL_Color operator+(const SDL_Color &c1, const SDL_Color &c2)
 {
-    return {static_cast<Uint8>(v1.r + v2.r), static_cast<Uint8>(v1.g + v2.g), static_cast<Uint8>(v1.b + v2.b), static_cast<Uint8>(v1.a + v2.a)};
+    return {static_cast<Uint8>(c1.r + c2.r), static_cast<Uint8>(c1.g + c2.g), static_cast<Uint8>(c1.b + c2.b), static_cast<Uint8>(c1.a + c2.a)};
 }

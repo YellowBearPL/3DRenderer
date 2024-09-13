@@ -117,11 +117,6 @@ public:
     }
 };
 
-SDL_Color operator/(const SDL_Color &color, const double &f)
-{
-    return {static_cast<Uint8>(color.r / f), static_cast<Uint8>(color.g / f), static_cast<Uint8>(color.b / f), color.a};
-}
-
 SDL_Color &operator/=(SDL_Color &color, const double &f)
 {
     color = color / f;

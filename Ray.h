@@ -10,7 +10,7 @@ SDL_Color operator*(const SDL_Color &color, const double &f);
 
 SDL_Color operator*(const double &f, const SDL_Color &color);
 
-SDL_Color operator+(const SDL_Color &v1, const SDL_Color &v2);
+SDL_Color operator+(const SDL_Color &c1, const SDL_Color &c2);
 
 class Hittable;
 

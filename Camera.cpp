@@ -3,6 +3,17 @@
 
 SDL_Renderer *Camera::image;
 
+SDL_Color operator/(const SDL_Color &color, const double &f)
+{
+    return {static_cast<Uint8>(color.r / f), static_cast<Uint8>(color.g / f), static_cast<Uint8>(color.b / f), static_cast<Uint8>(color.a / f)};
+}
+
+SDL_Color &operator+=(SDL_Color &c1, const SDL_Color &c2)
+{
+    c1 = c1 + c2;
+    return c1;
+}
+
 void Camera::render(const Hittable &world)
 {
     initialize();
@@ -11,10 +22,13 @@ void Camera::render(const Hittable &world)
         std::clog << "\rScanlines remaining: " << (imageHeight - j) << ' ' << std::flush;
         for (int i = 0; i < imageWidth; i++)
         {
-            Vec3f pixelCenter = pixel00Loc + (float(i) * pixelDeltaU) + (float(j) * pixelDeltaV);
-            Vec3f rayDirection = pixelCenter - center;
-            Ray r{center, rayDirection};
-            SDL_Color pixelColor = rayColor(r, world);
+            SDL_Color pixelColor{0, 0, 0, 255};
+            for (int sample = 0; sample < samplesPerPixel; sample++)
+            {
+                Ray r = getRay(i, j);
+                pixelColor += rayColor(r, world) / samplesPerPixel;
+            }
+
             SDL_SetRenderDrawColor(image, pixelColor.r, pixelColor.g, pixelColor.b, pixelColor.a);
             SDL_RenderDrawPoint(image, i, j);
         }
@@ -25,6 +39,7 @@ void Camera::render(const Hittable &world)
 
 void Camera::initialize()
 {
+    pixelSamplesScale = 1.0 / samplesPerPixel;
     center = {0, 0, 0};
     double focalLength = 1.0;
     double viewportHeight = 2.0;
@@ -35,6 +50,15 @@ void Camera::initialize()
     pixelDeltaV = viewportV / float(imageHeight);
     Vec3f viewportUpperLeft = center - Vec3f(0, 0, float(focalLength)) - (viewportU / 2) - (viewportV / 2);
     pixel00Loc = viewportUpperLeft + (0.5f * (pixelDeltaU + pixelDeltaV));
+}
+
+Ray Camera::getRay(int i, int j) const
+{
+    Vec3f offset = sampleSquare();
+    Vec3f pixelSample = pixel00Loc + ((float(i) + offset.x) * pixelDeltaU) + ((float(j) + offset.y) * pixelDeltaV);
+    Point rayOrigin = center;
+    Vec3f rayDirection = pixelSample - rayOrigin;
+    return {rayOrigin, rayDirection};
 }
 
 SDL_Color Camera::rayColor(const Ray &r, const Hittable &world)
