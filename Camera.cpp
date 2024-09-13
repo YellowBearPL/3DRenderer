@@ -3,17 +3,6 @@
 
 SDL_Renderer *Camera::image;
 
-SDL_Color operator/(const SDL_Color &color, const double &f)
-{
-    return {static_cast<Uint8>(color.r / f), static_cast<Uint8>(color.g / f), static_cast<Uint8>(color.b / f), static_cast<Uint8>(color.a / f)};
-}
-
-SDL_Color &operator+=(SDL_Color &c1, const SDL_Color &c2)
-{
-    c1 = c1 + c2;
-    return c1;
-}
-
 void Camera::render(const Hittable &world)
 {
     initialize();
@@ -22,14 +11,16 @@ void Camera::render(const Hittable &world)
         std::clog << "\rScanlines remaining: " << (imageHeight - j) << ' ' << std::flush;
         for (int i = 0; i < imageWidth; i++)
         {
-            SDL_Color pixelColor{0, 0, 0, 255};
+            Vec3f pixelColor{0, 0, 0};
             for (int sample = 0; sample < samplesPerPixel; sample++)
             {
                 Ray r = getRay(i, j);
-                pixelColor += rayColor(r, world) / samplesPerPixel;
+                pixelColor += rayColor(r, world);
             }
 
-            SDL_SetRenderDrawColor(image, pixelColor.r, pixelColor.g, pixelColor.b, pixelColor.a);
+            pixelColor *= pixelSamplesScale;
+            static const Interval intensity{0.000, 0.999};
+            SDL_SetRenderDrawColor(image, int(256 * intensity.clamp(pixelColor.x)), int(256 * intensity.clamp(pixelColor.y)), int(256 * intensity.clamp(pixelColor.z)), 255);
             SDL_RenderDrawPoint(image, i, j);
         }
     }
@@ -61,15 +52,15 @@ Ray Camera::getRay(int i, int j) const
     return {rayOrigin, rayDirection};
 }
 
-SDL_Color Camera::rayColor(const Ray &r, const Hittable &world)
+Vec3f Camera::rayColor(const Ray &r, const Hittable &world)
 {
     HitRecord rec;
     if (world.hit(r, {0, infinity}, rec))
     {
-        return {static_cast<Uint8>((rec.normal.x + 1) * 127.5), static_cast<Uint8>((rec.normal.y + 1) * 127.5), static_cast<Uint8>((rec.normal.z + 1) * 127.5), 255};
+        return 0.5f * (rec.normal + Vec3f(1, 1, 1));
     }
 
     Vec3f unitDirection = r.dir.unitVector();
     double a = 0.5 * (unitDirection.y + 1.0);
-    return ((1.0 - a) * SDL_Color(255, 255, 255, 255)) + (a * SDL_Color(127, 178, 255, 255));
+    return (float(1.0 - a) * Vec3f(1.0, 1.0, 1.0)) + (float(a) * Vec3f(0.5, 0.7, 1.0));
 }
