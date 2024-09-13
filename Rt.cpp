@@ -8,7 +8,9 @@ double degreesToRadians(double degrees)
 
 double randomDouble()
 {
-    return std::mt19937(std::random_device()())() / (std::mt19937::max() + 1.0);
+    static std::uniform_real_distribution<double> distribution{0.0, 1.0};
+    static std::mt19937 generator{std::random_device()()};
+    return distribution(generator);
 }
 
 double randomDouble(double min, double max)
