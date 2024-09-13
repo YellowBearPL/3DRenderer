@@ -220,20 +220,10 @@ int main(int argc, char *argv[])
     Uint8 *ptr;
     SDL_Surface *srf = SDL_CreateRGBSurface(0, imageWidth, imageHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     srf->pixels = buffer.data();
-    auto aspectRatio = double(imageWidth) / imageHeight;
     HittableList world;
     world.add(std::make_shared<Sphere>(Point(0, 0, -1), 0.5));
     world.add(std::make_shared<Sphere>(Point(0, -100.5, -1), 100));
-    float focalLength = 1.0;
-    double viewportHeight = 2.0;
-    double viewportWidth = viewportHeight * aspectRatio;
-    Point cameraCenter = {0, 0, 0};
-    Vec3f viewportU{static_cast<float>(viewportWidth), 0, 0};
-    Vec3f viewportV{0, static_cast<float>(-viewportHeight), 0};
-    Vec3f pixelDeltaU = viewportU / imageWidth;
-    Vec3f pixelDeltaV = viewportV / imageHeight;
-    Vec3f viewportUpperLeft = cameraCenter - Vec3f(0, 0, focalLength) - (viewportU / 2) - (viewportV / 2);
-    Vec3f pixel00Loc = viewportUpperLeft + (0.5f * (pixelDeltaU + pixelDeltaV));
+    Camera cam;
     SDL_Event event;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
@@ -268,21 +258,7 @@ int main(int argc, char *argv[])
         {
             SDL_SetRenderDrawColor(Camera::image, 0, 0, 0, 0);
             SDL_RenderClear(Camera::image);
-            for (int j = 0; j < imageHeight; j++)
-            {
-                std::clog << "\rScanlines remaining: " << (imageHeight - j) << ' ' << std::flush;
-                for (int i = 0; i < imageWidth; i++)
-                {
-                    Vec3f pixelCenter = pixel00Loc + (float(i) * pixelDeltaU) + (float(j) * pixelDeltaV);
-                    Vec3f rayDirection = pixelCenter - cameraCenter;
-                    Ray r{cameraCenter, rayDirection};
-                    SDL_Color pixelColor = r.rayColor(world);
-                    SDL_SetRenderDrawColor(Camera::image, pixelColor.r, pixelColor.g, pixelColor.b, pixelColor.a);
-                    SDL_RenderDrawPoint(Camera::image, i, j);
-                }
-            }
-
-            std::clog << "\rDone.                 " << std::endl;
+            cam.render(world);
         }
 
         ImGui::End();

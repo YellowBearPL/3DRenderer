@@ -25,7 +25,5 @@ public:
     Ray(const Point &origin, const Vec3f &direction) : orig(origin), dir(direction) {}
 
     [[nodiscard]] Point at(double t) const { return orig + (float(t) * dir); }
-
-    SDL_Color rayColor(const Hittable &world);
 };
 #endif//INC_3DRENDERER_RAY_H

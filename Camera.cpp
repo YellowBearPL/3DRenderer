@@ -6,8 +6,6 @@ SDL_Renderer *Camera::image;
 void Camera::render(const Hittable &world)
 {
     initialize();
-    SDL_SetRenderDrawColor(image, 0, 0, 0, 0);
-    SDL_RenderClear(image);
     for (int j = 0; j < imageHeight; j++)
     {
         std::clog << "\rScanlines remaining: " << (imageHeight - j) << ' ' << std::flush;
@@ -16,7 +14,7 @@ void Camera::render(const Hittable &world)
             Vec3f pixelCenter = pixel00Loc + (float(i) * pixelDeltaU) + (float(j) * pixelDeltaV);
             Vec3f rayDirection = pixelCenter - center;
             Ray r{center, rayDirection};
-            SDL_Color pixelColor = r.rayColor(world);
+            SDL_Color pixelColor = rayColor(r, world);
             SDL_SetRenderDrawColor(image, pixelColor.r, pixelColor.g, pixelColor.b, pixelColor.a);
             SDL_RenderDrawPoint(image, i, j);
         }
