@@ -15,7 +15,7 @@ void Camera::render(const Hittable &world)
             for (int sample = 0; sample < samplesPerPixel; sample++)
             {
                 Ray r = getRay(i, j);
-                pixelColor += rayColor(r, world);
+                pixelColor += rayColor(r, maxDepth, world);
             }
 
             pixelColor *= pixelSamplesScale;
@@ -52,13 +52,18 @@ Ray Camera::getRay(int i, int j) const
     return {rayOrigin, rayDirection};
 }
 
-Vec3f Camera::rayColor(const Ray &r, const Hittable &world)
+Vec3f Camera::rayColor(const Ray &r, int depth, const Hittable &world)
 {
+    if (depth <= 0)
+    {
+        return {0, 0, 0};
+    }
+
     HitRecord rec;
     if (world.hit(r, {0, infinity}, rec))
     {
         Vec3f direction = rec.normal.randomOnHemisphere();
-        return 0.5f * rayColor({rec.p, direction}, world);
+        return 0.5f * rayColor({rec.p, direction}, depth - 1, world);
     }
 
     Vec3f unitDirection = r.dir.unitVector();
