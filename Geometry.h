@@ -145,6 +145,8 @@ public:
     Vec3<T> unitVector() const { return *this / length(); }
 
     Vec3<T> randomUnitVector();
+
+    Vec3<T> randomOnHemisphere();
 };
 
 using Vec3f = Vec3<float>;

@@ -214,6 +214,20 @@ Vec3<T> Vec3<T>::randomUnitVector()
 }
 
 template<typename T>
+Vec3<T> Vec3<T>::randomOnHemisphere()
+{
+    Vec3<T> onUnitSphere = randomUnitVector();
+    if (dot(onUnitSphere) > 0.0)
+    {
+        return onUnitSphere;
+    }
+    else
+    {
+        return -onUnitSphere;
+    }
+}
+
+template<typename T>
 T Dt2<T>::det(Mat22<T> const &src)
 {
     T ret = 0;
