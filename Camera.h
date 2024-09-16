@@ -12,7 +12,7 @@ public:
     void render(const Hittable &world);
 
 private:
-    double pixelSamplesScale{};
+    float pixelSamplesScale{};
     Point center;
     Point pixel00Loc;
     Vec3f pixelDeltaU;

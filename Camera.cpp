@@ -30,7 +30,7 @@ void Camera::render(const Hittable &world)
 
 void Camera::initialize()
 {
-    pixelSamplesScale = 1.0 / samplesPerPixel;
+    pixelSamplesScale = float(1.0 / samplesPerPixel);
     center = {0, 0, 0};
     double focalLength = 1.0;
     double viewportHeight = 2.0;
@@ -57,7 +57,8 @@ Vec3f Camera::rayColor(const Ray &r, const Hittable &world)
     HitRecord rec;
     if (world.hit(r, {0, infinity}, rec))
     {
-        return 0.5f * (rec.normal + Vec3f(1, 1, 1));
+        Vec3f direction = rec.normal.randomOnHemisphere();
+        return 0.5f * rayColor({rec.p, direction}, world);
     }
 
     Vec3f unitDirection = r.dir.unitVector();
