@@ -200,6 +200,20 @@ Vec3<T> &Vec3<T>::operator/=(T const &t)
 }
 
 template<typename T>
+Vec3<T> Vec3<T>::randomUnitVector()
+{
+    while (true)
+    {
+        Vec3<T> p = Vec3<T>::random(-1, 1);
+        T lensq = p.lengthSquared();
+        if (lensq <= 1)
+        {
+            return p / sqrt(lensq);
+        }
+    }
+}
+
+template<typename T>
 T Dt2<T>::det(Mat22<T> const &src)
 {
     T ret = 0;

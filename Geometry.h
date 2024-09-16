@@ -143,6 +143,8 @@ public:
     static Vec3<T> random(double min, double max) { return {randomDouble(min, max), randomDouble(min, max), randomDouble(min, max)}; }
 
     Vec3<T> unitVector() const { return *this / length(); }
+
+    Vec3<T> randomUnitVector();
 };
 
 using Vec3f = Vec3<float>;
