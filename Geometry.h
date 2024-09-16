@@ -138,9 +138,9 @@ public:
 
     T lengthSquared() const { return (x * x) + (y * y) + (z * z); }
 
-    static Vec3<T> random() { return {randomDouble(), randomDouble(), randomDouble()}; }
+    static Vec3<T> random() { return {randomFloat(), randomFloat(), randomFloat()}; }
 
-    static Vec3<T> random(double min, double max) { return {randomDouble(min, max), randomDouble(min, max), randomDouble(min, max)}; }
+    static Vec3<T> random(T min, T max) { return {randomFloat(min, max), randomFloat(min, max), randomFloat(min, max)}; }
 
     Vec3<T> unitVector() const { return *this / length(); }
 

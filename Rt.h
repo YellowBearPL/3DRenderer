@@ -7,7 +7,7 @@ const double pi = 3.1415926535897932385;
 
 double degreesToRadians(double degrees);
 
-double randomDouble();
+float randomFloat();
 
-double randomDouble(double min, double max);
+float randomFloat(float min, float max);
 #endif//INC_3DRENDERER_RT_H

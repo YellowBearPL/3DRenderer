@@ -22,7 +22,7 @@ private:
 
     [[nodiscard]] Ray getRay(int i, int j) const;
 
-    static Vec3f sampleSquare() { return {static_cast<float>(randomDouble() - 0.5), static_cast<float>(randomDouble() - 0.5), 0}; };
+    static Vec3f sampleSquare() { return {randomFloat() - 0.5f, randomFloat() - 0.5f, 0}; };
 
     static Vec3f rayColor(const Ray &r, const Hittable &world);
 };

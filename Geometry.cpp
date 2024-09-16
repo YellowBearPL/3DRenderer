@@ -206,7 +206,7 @@ Vec3<T> Vec3<T>::randomUnitVector()
     {
         Vec3<T> p = Vec3<T>::random(-1, 1);
         T lensq = p.lengthSquared();
-        if (lensq <= 1)
+        if (1e-16 < lensq && lensq <= 1)
         {
             return p / sqrt(lensq);
         }
