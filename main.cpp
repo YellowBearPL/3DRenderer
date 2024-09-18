@@ -60,12 +60,14 @@ std::vector<std::vector<int>> worldMap =
                 {2, 2, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0, 0, 2, 2, 0, 5, 0, 5, 0, 0, 0, 5, 5},
                 {2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 5, 5, 5, 5, 5, 5, 5, 5, 5}
         };
+
 class Sprite
 {
 public:
     double x;
     double y;
     int texture;
+
     Sprite(double x, double y, int texture) : x(x), y(y), texture(texture) {}
 };
 
@@ -225,6 +227,7 @@ int main(int argc, char *argv[])
     world.add(std::make_shared<Sphere>(Point(0, -100.5, -1), 100));
     Camera cam;
     cam.samplesPerPixel = 100;
+    cam.maxDepth = 50;
     SDL_Event event;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
