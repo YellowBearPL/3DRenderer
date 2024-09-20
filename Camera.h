@@ -26,5 +26,7 @@ private:
     static Vec3f sampleSquare() { return {randomFloat() - 0.5f, randomFloat() - 0.5f, 0}; };
 
     static Vec3f rayColor(const Ray &r, int depth, const Hittable &world);
+
+    static double linearToGamma(double linearComponent);
 };
 #endif//INC_3DRENDERER_CAMERA_H

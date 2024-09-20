@@ -20,7 +20,7 @@ void Camera::render(const Hittable &world)
 
             pixelColor *= pixelSamplesScale;
             static const Interval intensity{0.000, 0.999};
-            SDL_SetRenderDrawColor(image, int(256 * intensity.clamp(pixelColor.x)), int(256 * intensity.clamp(pixelColor.y)), int(256 * intensity.clamp(pixelColor.z)), 255);
+            SDL_SetRenderDrawColor(image, int(256 * intensity.clamp(linearToGamma(pixelColor.x))), int(256 * intensity.clamp(linearToGamma(pixelColor.y))), int(256 * intensity.clamp(linearToGamma(pixelColor.z))), 255);
             SDL_RenderDrawPoint(image, i, j);
         }
     }
@@ -69,4 +69,14 @@ Vec3f Camera::rayColor(const Ray &r, int depth, const Hittable &world)
     Vec3f unitDirection = r.dir.unitVector();
     double a = 0.5 * (unitDirection.y + 1.0);
     return (float(1.0 - a) * Vec3f(1.0, 1.0, 1.0)) + (float(a) * Vec3f(0.5, 0.7, 1.0));
+}
+
+double Camera::linearToGamma(double linearComponent)
+{
+    if (linearComponent > 0)
+    {
+        return std::sqrt(linearComponent);
+    }
+
+    return 0;
 }
