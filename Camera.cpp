@@ -62,7 +62,7 @@ Vec3f Camera::rayColor(const Ray &r, int depth, const Hittable &world)
     HitRecord rec;
     if (world.hit(r, {0.001, infinity}, rec))
     {
-        Vec3f direction = rec.normal.randomOnHemisphere();
+        Vec3f direction = rec.normal + Vec3f::randomUnitVector();
         return 0.5f * rayColor({rec.p, direction}, depth - 1, world);
     }
 
