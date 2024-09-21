@@ -2,6 +2,7 @@
 #include "Geometry.h"
 #include "Gl.h"
 #include "HittableList.h"
+#include "Material.h"
 #include "Model.h"
 #include "Ray.h"
 #include "Sphere.h"
@@ -223,8 +224,14 @@ int main(int argc, char *argv[])
     SDL_Surface *srf = SDL_CreateRGBSurface(0, imageWidth, imageHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     srf->pixels = buffer.data();
     HittableList world;
-    world.add(std::make_shared<Sphere>(Point(0, 0, -1), 0.5, nullptr));
-    world.add(std::make_shared<Sphere>(Point(0, -100.5, -1), 100, nullptr));
+    std::shared_ptr materialGround = std::make_shared<Lambertian>(Vec3f(0.8, 0.8, 0.0));
+    std::shared_ptr materialCenter = std::make_shared<Lambertian>(Vec3f(0.1, 0.2, 0.5));
+    std::shared_ptr materialLeft = std::make_shared<Metal>(Vec3f(0.8, 0.8, 0.8));
+    std::shared_ptr materialRight = std::make_shared<Metal>(Vec3f(0.8, 0.6, 0.2));
+    world.add(make_shared<Sphere>(Point(0.0, -100.5, -1.0), 100.0, materialGround));
+    world.add(make_shared<Sphere>(Point(0.0, 0.0, -1.2), 0.5, materialCenter));
+    world.add(make_shared<Sphere>(Point(-1.0, 0.0, -1.0), 0.5, materialLeft));
+    world.add(make_shared<Sphere>(Point(1.0, 0.0, -1.0), 0.5, materialRight));
     Camera cam;
     cam.samplesPerPixel = 100;
     cam.maxDepth = 50;
