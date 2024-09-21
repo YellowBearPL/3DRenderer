@@ -42,6 +42,7 @@ add_executable(3DRenderer main.cpp
         Camera.cpp
         Camera.h
         Material.h
+        Material.cpp
 )
 
 target_link_libraries(3DRenderer SDL2_test SDL2)
