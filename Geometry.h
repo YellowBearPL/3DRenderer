@@ -149,6 +149,8 @@ public:
     static Vec3<T> randomUnitVector();
 
     Vec3<T> randomOnHemisphere();
+
+    Vec3<T> reflect(const Vec3<T> &n) { return *this - (2 * dot(n) * n); }
 };
 
 using Vec3f = Vec3<float>;
