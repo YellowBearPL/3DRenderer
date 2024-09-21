@@ -12,5 +12,6 @@ public:
 private:
     Point center;
     double radius;
+    std::shared_ptr<Material> mat;
 };
 #endif//INC_3DRENDERER_SPHERE_H
