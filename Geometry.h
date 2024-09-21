@@ -151,6 +151,8 @@ public:
     Vec3<T> randomOnHemisphere();
 
     Vec3<T> reflect(const Vec3<T> &n) const { return *this - (2 * dot(n) * n); }
+
+    Vec3<T> refract(const Vec3<T> &n, float etaiOverEtat);
 };
 
 using Vec3f = Vec3<float>;

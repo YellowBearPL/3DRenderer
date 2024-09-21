@@ -235,6 +235,15 @@ Vec3<T> Vec3<T>::randomOnHemisphere()
 }
 
 template<typename T>
+Vec3<T> Vec3<T>::refract(Vec3<T> const &n, float etaiOverEtat)
+{
+    T cosTheta = std::fmin(-dot(n), 1.0);
+    Vec3<T> rOutPerp = etaiOverEtat * (*this + (cosTheta * n));
+    Vec3<T> rOutParallel = float(-std::sqrt(std::fabs(1.0 - rOutPerp.lengthSquared()))) * n;
+    return rOutPerp + rOutParallel;
+}
+
+template<typename T>
 T Dt2<T>::det(Mat22<T> const &src)
 {
     T ret = 0;
