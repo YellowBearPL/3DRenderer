@@ -33,4 +33,15 @@ private:
     Vec3f albedo;
     float fuzz;
 };
+
+class Dielectric : public Material
+{
+public:
+    explicit Dielectric(float refractionIndex) : refractionIndex(refractionIndex) {}
+
+    bool scatter(const Ray &rIn, const HitRecord &rec, Vec3f &attenuation, Ray &scattered) const override;
+
+private:
+    float refractionIndex;
+};
 #endif//INC_3DRENDERER_MATERIAL_H
