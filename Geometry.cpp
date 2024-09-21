@@ -200,6 +200,13 @@ Vec3<T> &Vec3<T>::operator/=(T const &t)
 }
 
 template<typename T>
+bool Vec3<T>::nearZero() const
+{
+    T s = 1e-8;
+    return (std::fabs(x) < s) && (std::fabs(y) < s) && (std::fabs(z) < s);
+}
+
+template<typename T>
 Vec3<T> Vec3<T>::randomUnitVector()
 {
     while (true)

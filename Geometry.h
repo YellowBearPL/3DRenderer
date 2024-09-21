@@ -138,6 +138,8 @@ public:
 
     T lengthSquared() const { return (x * x) + (y * y) + (z * z); }
 
+    bool nearZero() const;
+
     static Vec3<T> random() { return {randomFloat(), randomFloat(), randomFloat()}; }
 
     static Vec3<T> random(T min, T max) { return {randomFloat(min, max), randomFloat(min, max), randomFloat(min, max)}; }
