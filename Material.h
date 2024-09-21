@@ -21,4 +21,15 @@ public:
 private:
     Vec3f albedo;
 };
+
+class Metal : public Material
+{
+public:
+    explicit Metal(const Vec3f &albedo) : albedo(albedo) {}
+
+    bool scatter(const Ray &rIn, const HitRecord &rec, Vec3f &attenuation, Ray &scattered) const override;
+
+private:
+    Vec3f albedo;
+};
 #endif//INC_3DRENDERER_MATERIAL_H

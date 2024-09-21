@@ -12,3 +12,11 @@ bool Lambertian::scatter(const Ray &rIn, const HitRecord &rec, Vec3f &attenuatio
     attenuation = albedo;
     return true;
 }
+
+bool Metal::scatter(const Ray &rIn, const HitRecord &rec, Vec3f &attenuation, Ray &scattered) const
+{
+    Vec3f reflected = rIn.dir.reflect(rec.normal);
+    scattered = {rec.p, reflected};
+    attenuation = albedo;
+    return true;
+}
