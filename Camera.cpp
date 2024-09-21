@@ -1,7 +1,12 @@
 #include "Camera.h"
 #include <iostream>
+#include "Material.h"
 
 SDL_Renderer *Camera::image;
+
+Vec3f operator*(const Vec3f &u, const Vec3f &v) {
+    return {u.x * v.x, u.y * v.y, u.z * v.z};
+}
 
 void Camera::render(const Hittable &world)
 {
@@ -62,8 +67,14 @@ Vec3f Camera::rayColor(const Ray &r, int depth, const Hittable &world)
     HitRecord rec;
     if (world.hit(r, {0.001, infinity}, rec))
     {
-        Vec3f direction = rec.normal + Vec3f::randomUnitVector();
-        return 0.1f * rayColor({rec.p, direction}, depth - 1, world);
+        Ray scattered;
+        Vec3f attenuation;
+        if (rec.mat->scatter(r, rec, attenuation, scattered))
+        {
+            return attenuation * rayColor(scattered, depth - 1, world);
+        }
+
+        return {0, 0, 0};
     }
 
     Vec3f unitDirection = r.dir.unitVector();
