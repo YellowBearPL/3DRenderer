@@ -223,8 +223,8 @@ int main(int argc, char *argv[])
     SDL_Surface *srf = SDL_CreateRGBSurface(0, imageWidth, imageHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     srf->pixels = buffer.data();
     HittableList world;
-    world.add(std::make_shared<Sphere>(Point(0, 0, -1), 0.5));
-    world.add(std::make_shared<Sphere>(Point(0, -100.5, -1), 100));
+    world.add(std::make_shared<Sphere>(Point(0, 0, -1), 0.5, nullptr));
+    world.add(std::make_shared<Sphere>(Point(0, -100.5, -1), 100, nullptr));
     Camera cam;
     cam.samplesPerPixel = 100;
     cam.maxDepth = 50;
