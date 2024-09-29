@@ -226,7 +226,7 @@ int main(int argc, char *argv[])
     HittableList world;
     std::shared_ptr<Lambertian> materialGround = std::make_shared<Lambertian>(Vec3f(0.8, 0.8, 0.0));
     std::shared_ptr<Lambertian> materialCenter = std::make_shared<Lambertian>(Vec3f(0.1, 0.2, 0.5));
-    std::shared_ptr<Dielectric> materialLeft = std::make_shared<Dielectric>(1.50);
+    std::shared_ptr<Dielectric> materialLeft = std::make_shared<Dielectric>(1.00 / 1.33);
     std::shared_ptr<Metal> materialRight = std::make_shared<Metal>(Vec3f(0.8, 0.6, 0.2), 1.0);
     world.add(make_shared<Sphere>(Point(0.0, -100.5, -1.0), 100.0, materialGround));
     world.add(make_shared<Sphere>(Point(0.0, 0.0, -1.2), 0.5, materialCenter));
