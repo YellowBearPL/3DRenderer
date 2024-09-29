@@ -27,7 +27,18 @@ bool Dielectric::scatter(const Ray &rIn, const HitRecord &rec, Vec3f &attenuatio
     attenuation = {1.0, 1.0, 1.0};
     float ri = rec.frontFace ? (1.0f / refractionIndex) : refractionIndex;
     Vec3f unitDirection = rIn.dir.unitVector();
-    Vec3f refracted = unitDirection.refract(rec.normal, ri);
+    double cosTheta = std::fmin(-unitDirection.dot(rec.normal), 1.0);
+    double sinTheta = std::sqrt(1.0 - (cosTheta * cosTheta));
+    Vec3f refracted;
+    if (ri * sinTheta > 1.0)
+    {
+        refracted = unitDirection.reflect(rec.normal);
+    }
+    else
+    {
+        refracted = unitDirection.refract(rec.normal, ri);
+    }
+
     scattered = {rec.p, refracted};
     return true;
 }
