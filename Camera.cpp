@@ -38,7 +38,9 @@ void Camera::initialize()
     pixelSamplesScale = float(1.0 / samplesPerPixel);
     center = {0, 0, 0};
     double focalLength = 1.0;
-    double viewportHeight = 2.0;
+    double theta = degreesToRadians(vfov);
+    double h = std::tan(theta / 2);
+    double viewportHeight = 2 * h * focalLength;
     double viewportWidth = viewportHeight * aspectRatio;
     Vec3f viewportU{static_cast<float>(viewportWidth), 0, 0};
     Vec3f viewportV{0, static_cast<float>(-viewportHeight), 0};

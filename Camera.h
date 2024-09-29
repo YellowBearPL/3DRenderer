@@ -9,6 +9,7 @@ public:
     double aspectRatio = double(imageWidth) / imageHeight;
     int samplesPerPixel = 10;
     int maxDepth = 10;
+    double vfov = 90;
 
     void render(const Hittable &world);
 
