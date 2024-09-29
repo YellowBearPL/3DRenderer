@@ -232,6 +232,7 @@ int main(int argc, char *argv[])
     Camera cam;
     cam.samplesPerPixel = 100;
     cam.maxDepth = 50;
+    cam.vfov = 90;
     SDL_Event event;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);

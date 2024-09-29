@@ -6,10 +6,13 @@ class Camera
 {
 public:
     static SDL_Renderer *image;
-    double aspectRatio = double(imageWidth) / imageHeight;
+    float aspectRatio = float(imageWidth) / float(imageHeight);
     int samplesPerPixel = 10;
     int maxDepth = 10;
     double vfov = 90;
+    Point lookfrom{0, 0, 0};
+    Point lookat{0, 0, -1};
+    Vec3f vup{0, 1, 0};
 
     void render(const Hittable &world);
 
@@ -19,6 +22,7 @@ private:
     Point pixel00Loc;
     Vec3f pixelDeltaU;
     Vec3f pixelDeltaV;
+    Vec3f u, v, w;
 
     void initialize();
 

@@ -36,17 +36,20 @@ void Camera::render(const Hittable &world)
 void Camera::initialize()
 {
     pixelSamplesScale = float(1.0 / samplesPerPixel);
-    center = {0, 0, 0};
-    double focalLength = 1.0;
+    center = lookfrom;
+    float focalLength = (lookfrom - lookat).length();
     double theta = degreesToRadians(vfov);
-    double h = std::tan(theta / 2);
-    double viewportHeight = 2 * h * focalLength;
-    double viewportWidth = viewportHeight * aspectRatio;
-    Vec3f viewportU{static_cast<float>(viewportWidth), 0, 0};
-    Vec3f viewportV{0, static_cast<float>(-viewportHeight), 0};
+    auto h = float(std::tan(theta / 2));
+    float viewportHeight = 2.f * h * focalLength;
+    float viewportWidth = viewportHeight * aspectRatio;
+    w = (lookfrom - lookat).unitVector();
+    u = vup.cross(w).unitVector();
+    v = w.cross(u);
+    Vec3f viewportU = viewportWidth * u;
+    Vec3f viewportV = viewportHeight * -v;
     pixelDeltaU = viewportU / float(imageWidth);
     pixelDeltaV = viewportV / float(imageHeight);
-    Vec3f viewportUpperLeft = center - Vec3f(0, 0, float(focalLength)) - (viewportU / 2) - (viewportV / 2);
+    Vec3f viewportUpperLeft = center - (focalLength * w) - (viewportU / 2) - (viewportV / 2);
     pixel00Loc = viewportUpperLeft + (0.5f * (pixelDeltaU + pixelDeltaV));
 }
 
