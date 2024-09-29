@@ -29,16 +29,17 @@ bool Dielectric::scatter(const Ray &rIn, const HitRecord &rec, Vec3f &attenuatio
     Vec3f unitDirection = rIn.dir.unitVector();
     double cosTheta = std::fmin(-unitDirection.dot(rec.normal), 1.0);
     double sinTheta = std::sqrt(1.0 - (cosTheta * cosTheta));
-    Vec3f refracted;
-    if (ri * sinTheta > 1.0)
+    bool cannotRefract = ri * sinTheta > 1.0;
+    Vec3f direction;
+    if (cannotRefract)
     {
-        refracted = unitDirection.reflect(rec.normal);
+        direction = unitDirection.reflect(rec.normal);
     }
     else
     {
-        refracted = unitDirection.refract(rec.normal, ri);
+        direction = unitDirection.refract(rec.normal, ri);
     }
 
-    scattered = {rec.p, refracted};
+    scattered = {rec.p, direction};
     return true;
 }
