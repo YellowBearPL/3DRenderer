@@ -43,5 +43,7 @@ public:
 
 private:
     float refractionIndex;
+
+    static double reflectance(double cosine, double refractionIndex);
 };
 #endif//INC_3DRENDERER_MATERIAL_H

@@ -31,7 +31,7 @@ bool Dielectric::scatter(const Ray &rIn, const HitRecord &rec, Vec3f &attenuatio
     double sinTheta = std::sqrt(1.0 - (cosTheta * cosTheta));
     bool cannotRefract = ri * sinTheta > 1.0;
     Vec3f direction;
-    if (cannotRefract)
+    if (cannotRefract || reflectance(cosTheta, ri) > randomFloat())
     {
         direction = unitDirection.reflect(rec.normal);
     }
@@ -42,4 +42,11 @@ bool Dielectric::scatter(const Ray &rIn, const HitRecord &rec, Vec3f &attenuatio
 
     scattered = {rec.p, direction};
     return true;
+}
+
+double Dielectric::reflectance(double cosine, double refractionIndex)
+{
+    double r0 = (1 - refractionIndex) / (1 + refractionIndex);
+    r0 *= r0;
+    return r0 + ((1 - r0) * std::pow((1 - cosine),5));
 }
