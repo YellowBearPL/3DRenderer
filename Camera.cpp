@@ -37,10 +37,9 @@ void Camera::initialize()
 {
     pixelSamplesScale = float(1.0 / samplesPerPixel);
     center = lookfrom;
-    float focalLength = (lookfrom - lookat).length();
     double theta = degreesToRadians(vfov);
     auto h = float(std::tan(theta / 2));
-    float viewportHeight = 2.f * h * focalLength;
+    float viewportHeight = 2.f * h * focusDist;
     float viewportWidth = viewportHeight * aspectRatio;
     w = (lookfrom - lookat).unitVector();
     u = vup.cross(w).unitVector();
@@ -49,17 +48,26 @@ void Camera::initialize()
     Vec3f viewportV = viewportHeight * -v;
     pixelDeltaU = viewportU / float(imageWidth);
     pixelDeltaV = viewportV / float(imageHeight);
-    Vec3f viewportUpperLeft = center - (focalLength * w) - (viewportU / 2) - (viewportV / 2);
+    Vec3f viewportUpperLeft = center - (focusDist * w) - (viewportU / 2) - (viewportV / 2);
     pixel00Loc = viewportUpperLeft + (0.5f * (pixelDeltaU + pixelDeltaV));
+    auto defocusRadius = float(focusDist * std::tan(degreesToRadians(defocusAngle / 2)));
+    defocusDiskU = u * defocusRadius;
+    defocusDiskV = v * defocusRadius;
 }
 
 Ray Camera::getRay(int i, int j) const
 {
     Vec3f offset = sampleSquare();
     Vec3f pixelSample = pixel00Loc + ((float(i) + offset.x) * pixelDeltaU) + ((float(j) + offset.y) * pixelDeltaV);
-    Point rayOrigin = center;
+    Point rayOrigin = (defocusAngle <= 0) ? center : defocusDiskSample();
     Vec3f rayDirection = pixelSample - rayOrigin;
     return {rayOrigin, rayDirection};
+}
+
+Point Camera::defocusDiskSample() const
+{
+    Vec3f p = Vec3f::randomInUnitDisk();
+    return center + (p[0] * defocusDiskU) + (p[1] * defocusDiskV);
 }
 
 Vec3f Camera::rayColor(const Ray &r, int depth, const Hittable &world)
