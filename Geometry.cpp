@@ -207,6 +207,19 @@ bool Vec3<T>::nearZero() const
 }
 
 template<typename T>
+Vec3<T> Vec3<T>::randomInUnitDisk()
+{
+    while (true)
+    {
+        Vec3<T> p = {randomFloat(-1, 1), randomFloat(-1, 1), 0};
+        if (p.lengthSquared() < 1)
+        {
+            return p;
+        }
+    }
+}
+
+template<typename T>
 Vec3<T> Vec3<T>::randomUnitVector()
 {
     while (true)

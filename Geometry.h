@@ -146,6 +146,8 @@ public:
 
     Vec3<T> unitVector() const { return *this / length(); }
 
+    static Vec3<T> randomInUnitDisk();
+
     static Vec3<T> randomUnitVector();
 
     Vec3<T> randomOnHemisphere();
