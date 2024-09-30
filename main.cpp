@@ -241,6 +241,8 @@ int main(int argc, char *argv[])
     cam.lookfrom = {-2, 2, 1};
     cam.lookat = {0, 0, -1};
     cam.vup = {0, 1, 0};
+    cam.defocusAngle = 10.0;
+    cam.focusDist = 3.4;
     SDL_Event event;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
