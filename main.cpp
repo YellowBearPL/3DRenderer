@@ -237,7 +237,7 @@ int main(int argc, char *argv[])
     Camera cam;
     cam.samplesPerPixel = 100;
     cam.maxDepth = 50;
-    cam.vfov = 90;
+    cam.vfov = 20;
     cam.lookfrom = {-2, 2, 1};
     cam.lookat = {0, 0, -1};
     cam.vup = {0, 1, 0};
