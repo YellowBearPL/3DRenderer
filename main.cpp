@@ -28,11 +28,10 @@
 std::unique_ptr<Model> model = nullptr;
 const int imageWidth = 1920;
 const int imageHeight = 1080;
-const float invWidth = 1 / float(imageWidth), invHeight = 1 / float(imageHeight);
 const float fov = 30, aspectratio = imageWidth / float(imageHeight);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
 Vec3f eye{1, 1, 3};
-Vec3f center{0, 0, 0};
+Vec3f vCenter{0, 0, 0};
 Vec3f up{0, 1, 0};
 std::vector<std::vector<int>> worldMap =
         {
@@ -180,9 +179,9 @@ int main(int argc, char *argv[])
         model = std::make_unique<Model>("obj/teapot.obj");
     }
 
-    eye.lookat(center, up);
+    eye.lookat(vCenter, up);
     viewport(imageWidth / 8, imageHeight / 8, imageWidth * 3 / 4, imageHeight * 3 / 4);
-    projection(-1.f / (eye - center).norm());
+    projection(-1.f / (eye - vCenter).norm());
     std::vector<Vec4f> screenCoords(3);
     std::vector<float> zbuffer(imageWidth * imageHeight);
     for (int i = imageWidth * imageHeight; --i;)
@@ -224,25 +223,54 @@ int main(int argc, char *argv[])
     SDL_Surface *srf = SDL_CreateRGBSurface(0, imageWidth, imageHeight, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
     srf->pixels = buffer.data();
     HittableList world;
-    std::shared_ptr<Lambertian> materialGround = std::make_shared<Lambertian>(Vec3f(0.8, 0.8, 0.0));
-    std::shared_ptr<Lambertian> materialCenter = std::make_shared<Lambertian>(Vec3f(0.1, 0.2, 0.5));
-    std::shared_ptr<Dielectric> materialLeft = std::make_shared<Dielectric>(1.50);
-    std::shared_ptr<Dielectric> materialBubble = std::make_shared<Dielectric>(1.00 / 1.50);
-    std::shared_ptr<Metal> materialRight = std::make_shared<Metal>(Vec3f(0.8, 0.6, 0.2), 1.0);
-    world.add(make_shared<Sphere>(Point( 0.0, -100.5, -1.0), 100.0, materialGround));
-    world.add(make_shared<Sphere>(Point( 0.0, 0.0, -1.2), 0.5, materialCenter));
-    world.add(make_shared<Sphere>(Point(-1.0, 0.0, -1.0), 0.5, materialLeft));
-    world.add(make_shared<Sphere>(Point(-1.0, 0.0, -1.0), 0.4, materialBubble));
-    world.add(make_shared<Sphere>(Point( 1.0, 0.0, -1.0), 0.5, materialRight));
+    std::shared_ptr<Lambertian> groundMaterial = std::make_shared<Lambertian>(Vec3f(0.5, 0.5, 0.5));
+    world.add(std::make_shared<Sphere>(Point(0, -1000, 0), 1000, groundMaterial));
+    for (int a = -11; a < 11; a++)
+    {
+        for (int b = -11; b < 11; b++)
+        {
+            float chooseMat = randomFloat();
+            Point center{static_cast<float>(a + (0.9 * randomFloat())), 0.2, static_cast<float>(b + (0.9 * randomFloat()))};
+            if ((center - Point(4, 0.2, 0)).length() > 0.9)
+            {
+                std::shared_ptr<Material> sphereMaterial;
+                if (chooseMat < 0.8)
+                {
+                    Vec3f albedo = Vec3f::random() * Vec3f::random();
+                    sphereMaterial = std::make_shared<Lambertian>(albedo);
+                    world.add(std::make_shared<Sphere>(center, 0.2, sphereMaterial));
+                }
+                else if (chooseMat < 0.95)
+                {
+                    Vec3f albedo = Vec3f::random(0.5, 1);
+                    float fuzz = randomFloat(0, 0.5);
+                    sphereMaterial = std::make_shared<Metal>(albedo, fuzz);
+                    world.add(std::make_shared<Sphere>(center, 0.2, sphereMaterial));
+                }
+                else
+                {
+                    sphereMaterial = std::make_shared<Dielectric>(1.5);
+                    world.add(std::make_shared<Sphere>(center, 0.2, sphereMaterial));
+                }
+            }
+        }
+    }
+
+    std::shared_ptr<Dielectric> material1 = std::make_shared<Dielectric>(1.5);
+    world.add(std::make_shared<Sphere>(Point(0, 1, 0), 1.0, material1));
+    std::shared_ptr<Lambertian> material2 = std::make_shared<Lambertian>(Vec3f(0.4, 0.2, 0.1));
+    world.add(std::make_shared<Sphere>(Point(-4, 1, 0), 1.0, material2));
+    std::shared_ptr<Metal> material3 = std::make_shared<Metal>(Vec3f(0.7, 0.6, 0.5), 0.0);
+    world.add(std::make_shared<Sphere>(Point(4, 1, 0), 1.0, material3));
     Camera cam;
-    cam.samplesPerPixel = 100;
-    cam.maxDepth = 50;
+    cam.samplesPerPixel = 10;
+    cam.maxDepth = 10;
     cam.vfov = 20;
-    cam.lookfrom = {-2, 2, 1};
-    cam.lookat = {0, 0, -1};
+    cam.lookfrom = {13, 2, 3};
+    cam.lookat = {0, 0, 0};
     cam.vup = {0, 1, 0};
-    cam.defocusAngle = 10.0;
-    cam.focusDist = 3.4;
+    cam.defocusAngle = 0.6;
+    cam.focusDist = 10.0;
     SDL_Event event;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);

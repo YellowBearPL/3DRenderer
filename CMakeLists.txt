@@ -9,8 +9,6 @@ add_executable(3DRenderer main.cpp
         Ray.h
         Sphere.cpp
         Sphere.h
-        Light.cpp
-        Light.h
         imgui/imconfig.h
         imgui/imgui.cpp
         imgui/imgui.h

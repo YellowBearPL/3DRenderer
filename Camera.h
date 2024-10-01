@@ -2,6 +2,8 @@
 #define INC_3DRENDERER_CAMERA_H
 #include "Hittable.h"
 
+Vec3f operator*(const Vec3f &u, const Vec3f &v);
+
 class Camera
 {
 public:

@@ -17,8 +17,8 @@ public:
 
     [[nodiscard]] bool surrounds(double x) const { return min < x && x < max; }
 
-    double clamp(double x) const;
+    [[nodiscard]] double clamp(double x) const;
 
-    static const Interval empty, universe;
+    static const Interval empty;
 };
 #endif//INC_3DRENDERER_INTERVAL_H

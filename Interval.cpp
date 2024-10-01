@@ -1,7 +1,6 @@
 #include "Interval.h"
 
-const Interval Interval::empty    = Interval(+infinity, -infinity);
-const Interval Interval::universe = Interval(-infinity, +infinity);
+const Interval Interval::empty = {+infinity, -infinity};
 
 double Interval::clamp(double x) const
 {

@@ -124,8 +124,6 @@ public:
 
     [[nodiscard]] T distance(const Vec3<T> &v) const { return sqrt((v - *this).length2()); }
 
-    void fresnel(const Vec3<T> &direction, T &kr, T &kt);
-
     void lookat(const Vec3<T> &center, const Vec3<T> &up);
 
     Vec3<T> operator/(const T &t) const { return *this * (1 / t); }
@@ -149,8 +147,6 @@ public:
     static Vec3<T> randomInUnitDisk();
 
     static Vec3<T> randomUnitVector();
-
-    Vec3<T> randomOnHemisphere();
 
     Vec3<T> reflect(const Vec3<T> &n) const { return *this - (2 * dot(n) * n); }
 

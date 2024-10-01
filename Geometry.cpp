@@ -162,14 +162,6 @@ Vec4<T> Vec3<T>::embed4(T fill)
 }
 
 template<typename T>
-void Vec3<T>::fresnel(Vec3<T> const &direction, T &kr, T &kt)
-{
-    float facingratio = -direction.dot(*this);
-    kr = float(0.1 + (pow(1 - facingratio, 3) * .9));
-    kt = 1 - kr;
-}
-
-template<typename T>
 void Vec3<T>::lookat(const Vec3<T> &center, const Vec3<T> &up)
 {
     Vec3<float> vZ = (*this - center).normalize();
@@ -230,20 +222,6 @@ Vec3<T> Vec3<T>::randomUnitVector()
         {
             return p / sqrt(lensq);
         }
-    }
-}
-
-template<typename T>
-Vec3<T> Vec3<T>::randomOnHemisphere()
-{
-    Vec3<T> onUnitSphere = randomUnitVector();
-    if (dot(onUnitSphere) > 0.0)
-    {
-        return onUnitSphere;
-    }
-    else
-    {
-        return -onUnitSphere;
     }
 }
 
