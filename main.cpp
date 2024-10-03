@@ -30,8 +30,6 @@ const int imageWidth = 1920;
 const int imageHeight = 1080;
 const float fov = 30, aspectratio = imageWidth / float(imageHeight);
 const float angle = float(tan(M_PI * 0.5 * fov / 180.));
-Vec3f eye{1, 1, 3};
-Vec3f vCenter{0, 0, 0};
 Vec3f up{0, 1, 0};
 std::vector<std::vector<int>> worldMap =
         {
@@ -98,27 +96,6 @@ std::array<double, imageWidth> zBuffer;
 std::vector<int> spriteOrder(NUM_SPRITES);
 std::vector<double> spriteDistance(NUM_SPRITES);
 
-extern Matrix modelView;
-
-class ZShader : public Shader
-{
-public:
-    Mat43<float> varyingTri;
-
-    Vec4f vertex(int iface, int nthvert) override
-    {
-        Vec4f glVertex = mProjection * modelView * model->vert(iface, nthvert).embed4();
-        varyingTri.setCol(nthvert, glVertex);
-        return glVertex;
-    }
-
-    bool fragment(Vec3f glFragCoord, Vec3f bar, SDL_Color &color) override
-    {
-        color = SDL_Color(0, 0, 0, 255);
-        return false;
-    }
-};
-
 SDL_Color operator/(const SDL_Color &color, const double &f)
 {
     return {static_cast<Uint8>(color.r / f), static_cast<Uint8>(color.g / f), static_cast<Uint8>(color.b / f), static_cast<Uint8>(color.a / f)};
@@ -167,7 +144,7 @@ SDL_Color intToRgb(Uint32 colorInt)
     return ColorRGBA;
 }
 
-int main(int argc, char *argv[])
+int main()
 {
     double posX = 22.0, posY = 11.5;
     double dirX = -1.0, dirY = 0.0;

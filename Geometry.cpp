@@ -1,7 +1,5 @@
 #include "Geometry.h"
 
-extern Matrix modelView;
-
 template<typename T>
 void Vec2<T>::line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color)
 {
@@ -46,51 +44,6 @@ void Vec2<T>::line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Colo
 }
 
 template<typename T>
-Vec3<T> Vec2<T>::barycentric(const Vec2<T> &b, const Vec2<T> &c, const Vec2<T> &p)
-{
-    std::array<Vec3f, 2> s;
-    s[1].x = c.v - v;
-    s[1].y = b.v - v;
-    s[1].z = v - p.v;
-    s[0].x = c.u - u;
-    s[0].y = b.u - u;
-    s[0].z = u - p.u;
-    Vec3f vU = s[0].cross(s[1]);
-    if (std::abs(vU[2]) > 1e-2)
-    {
-        return Vec3<T>(1.f - ((vU.x + vU.y) / vU.z), vU.y / vU.z, vU.x / vU.z);
-    }
-
-    return {-1, 1, 1};
-}
-
-template<typename T>
-T Vec2<T>::maxElevationAngle(const std::vector<T> &zbuffer, const Vec2<T> &dir)
-{
-    float maxangle = 0;
-    for (int t = 0; t < 1000; t += 1)
-    {
-        Vec2<T> cur = *this + (dir * t);
-        if (cur.u >= float(imageWidth) || cur.v >= float(imageHeight) || cur.u < 0 || cur.v < 0)
-        {
-            return maxangle;
-        }
-
-        float distance = (*this - cur).norm();
-        if (distance < 1.f)
-        {
-            continue;
-        }
-
-        float elevation = zbuffer[int(cur.u) + (int(cur.v) * imageWidth)] - zbuffer[int(u) + int(v) * imageWidth];
-        maxangle = std::max(maxangle, atanf(elevation / distance));
-    }
-
-    return maxangle;
-}
-
-
-template<typename T>
 T Vec4<T>::operator*(Vec4<T> const &v)
 {
     T ret{};
@@ -121,22 +74,6 @@ Vec4<T> &Vec4<T>::operator/=(T const &t)
 }
 
 template<typename T>
-Vec2<T> Vec4<T>::proj2()
-{
-    Vec2<T> ret;
-    ret.u = (*this)[0];
-    ret.v = (*this)[1];
-    return ret;
-}
-
-template<typename T>
-Vec3<T> &Vec3<T>::normalize(T l)
-{
-    *this *= l / norm();
-    return *this;
-}
-
-template<typename T>
 Vec3<T> &Vec3<T>::operator+=(Vec3<T> const &v)
 {
     *this = *this + v;
@@ -148,40 +85,6 @@ Vec3<T> &Vec3<T>::operator*=(T t)
 {
     *this = *this * t;
     return *this;
-}
-
-template<typename T>
-Vec4<T> Vec3<T>::embed4(T fill)
-{
-    Vec4<T> ret{};
-    ret[3] = fill;
-    ret[2] = z;
-    ret[1] = y;
-    ret[0] = x;
-    return ret;
-}
-
-template<typename T>
-void Vec3<T>::lookat(const Vec3<T> &center, const Vec3<T> &up)
-{
-    Vec3<float> vZ = (*this - center).normalize();
-    Vec3<float> vX = up.cross(vZ).normalize();
-    Vec3<float> vY = vZ.cross(vX).normalize();
-    Matrix minv = Matrix::identity();
-    Matrix tr = Matrix::identity();
-    minv[0][0] = vX.x;
-    minv[1][0] = vY.x;
-    minv[2][0] = vZ.x;
-    tr[0][3] = -x;
-    minv[0][1] = vX.y;
-    minv[1][1] = vY.y;
-    minv[2][1] = vZ.y;
-    tr[1][3] = -y;
-    minv[0][2] = vX.z;
-    minv[1][2] = vY.z;
-    minv[2][2] = vZ.z;
-    tr[2][3] = -z;
-    modelView = minv * tr;
 }
 
 template<typename T>
@@ -344,35 +247,12 @@ Vec4<T> Mat43<T>::col(size_t const idx) const
 }
 
 template<typename T>
-Mat34<T> Mat43<T>::transpose()
-{
-    Mat34<T> ret{};
-    for (size_t i = 3; i--; ret[i] = col(i));
-    return ret;
-}
-
-template<typename T>
 Vec4<T> Mat44<T>::col(size_t const idx) const
 {
     Vec4<T> ret{};
     for (size_t i = 4; i--;)
     {
         ret[i] = rows[i][idx];
-    }
-
-    return ret;
-}
-
-template<typename T>
-Mat44<T> Mat44<T>::identity()
-{
-    Mat44<T> ret{};
-    for (size_t i = 4; i--;)
-    {
-        for (size_t j = 4; j--;)
-        {
-            ret[i][j] = (i == j);
-        }
     }
 
     return ret;

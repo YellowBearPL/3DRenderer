@@ -37,8 +37,6 @@ public:
 
     const T &operator[](const size_t i) const { return i <= 0 ? u : v; }
 
-    float norm() { return std::sqrt((u * u) + (v * v)); }
-
     Vec2<T> operator+(const Vec2<T> &v2) const { return {u + v2.u, v + v2.v}; }
 
     Vec2<T> operator-(const Vec2<T> &v2) const { return {u - v2.u, v - v2.v}; }
@@ -48,16 +46,7 @@ public:
     static void line(int x0, int y0, int x1, int y1, SDL_Renderer *image, SDL_Color color);
 
     void line(const Vec2<T> &p1, SDL_Renderer *image, SDL_Color color) { line(u, v, p1.u, p1.v, image, color); }
-
-    Vec3<T> barycentric(const Vec2<T> &b, const Vec2<T> &c, const Vec2<T> &p);
-
-    T maxElevationAngle(const std::vector<T> &zbuffer, const Vec2<T> &dir);
-
-    T edgeFunction(const Vec2<T> &b, const Vec2<T> &c) { return (c.u - u) * (b.v - v) - (c.v - v) * (b.u - u); }
 };
-
-using Vec2i = Vec2<int>;
-using Vec2f = Vec2<float>;
 
 template<typename T>
 class Vec4
@@ -74,11 +63,7 @@ public:
     Vec4<T> operator/(const T &t);
 
     Vec4<T> &operator/=(const T &t);
-
-    Vec2<T> proj2();
 };
-
-using Vec4f = Vec4<float>;
 
 template<typename T>
 class Vec3
@@ -98,10 +83,6 @@ public:
 
     const T &operator[](const size_t i) const { return i <= 0 ? x : (1 == i ? y : z); }
 
-    [[nodiscard]] T norm() const { return std::sqrt((x * x) + (y * y) + (z * z)); }
-
-    Vec3<T> &normalize(T l=1);
-
     T operator*(const Vec3<T> &v) const { return (x * v.x) + (y * v.y) + (z * v.z); }
 
     Vec3<T> operator+(const Vec3<T> &v) const { return {x + v.x, y + v.y, z + v.z}; }
@@ -114,8 +95,6 @@ public:
 
     Vec3<T> &operator*=(T t);
 
-    Vec4<T> embed4(T fill = 1);
-
     Vec3<T> cross(const Vec3<T> &v2) const { return {(y * v2.z) - (z * v2.y), (z * v2.x) - (x * v2.z), (x * v2.y) - (y * v2.x)}; }
 
     Vec3<T> operator^(const Vec3<T> &v) const { return {(y * v.z) - (z * v.y), (z * v.x) - (x * v.z), (x * v.y) - (y * v.x)}; }
@@ -125,8 +104,6 @@ public:
     [[nodiscard]] T length2() const { return (x * x) + (y * y) + (z * z); }
 
     [[nodiscard]] T distance(const Vec3<T> &v) const { return sqrt((v - *this).length2()); }
-
-    void lookat(const Vec3<T> &center, const Vec3<T> &up);
 
     Vec3<T> operator/(const T &t) const { return *this * (1 / t); }
 
@@ -200,15 +177,6 @@ public:
 };
 
 template<typename T>
-class Mat32
-{
-    std::array<Vec2<T>, 3> rows;
-
-public:
-    Vec2<T> &operator[](const size_t idx) { return rows[idx]; }
-};
-
-template<typename T>
 class Mat33
 {
     std::array<Vec3<T>, 3> rows;
@@ -240,15 +208,6 @@ public:
 };
 
 template<typename T>
-class Mat34
-{
-    std::array<Vec4<T>, 3> rows;
-
-public:
-    Vec4<T> &operator[](const size_t idx) { return rows[idx]; }
-};
-
-template<typename T>
 class Mat43
 {
     std::array<Vec3<T>, 4> rows;
@@ -257,10 +216,6 @@ public:
     Vec3<T> &operator[] (const size_t idx) { return rows[idx]; }
 
     Vec4<T> col(size_t idx) const;
-
-    void setCol(size_t idx, const Vec4<T> &v) { for (size_t i = 4; i--; rows[i][idx] = v[i]); }
-
-    Mat34<T> transpose();
 };
 
 template<typename T>
@@ -276,8 +231,6 @@ public:
     const Vec4<T> &operator[](const size_t idx) const { return rows[idx]; }
 
     [[nodiscard]] Vec4<T> col(size_t idx) const;
-
-    static Mat44<T> identity();
 
     [[nodiscard]] Mat33<T> getMinor(size_t row, size_t col) const;
 
@@ -299,6 +252,4 @@ public:
 
     Mat44<T> operator/(const T &t);
 };
-
-using Matrix = Mat44<float>;
 #endif//INC_3DRENDERER_GEOMETRY_H
