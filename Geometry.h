@@ -52,6 +52,8 @@ public:
     Vec3<T> barycentric(const Vec2<T> &b, const Vec2<T> &c, const Vec2<T> &p);
 
     T maxElevationAngle(const std::vector<T> &zbuffer, const Vec2<T> &dir);
+
+    T edgeFunction(const Vec2<T> &b, const Vec2<T> &c) { return (c.u - u) * (b.v - v) - (c.v - v) * (b.u - u); }
 };
 
 using Vec2i = Vec2<int>;

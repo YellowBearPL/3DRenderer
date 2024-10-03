@@ -169,27 +169,6 @@ SDL_Color intToRgb(Uint32 colorInt)
 
 int main(int argc, char *argv[])
 {
-    SDL_Color color;
-    if (argc == 2)
-    {
-        model = std::make_unique<Model>(argv[1]);
-    }
-    else
-    {
-        model = std::make_unique<Model>("obj/teapot.obj");
-    }
-
-    eye.lookat(vCenter, up);
-    viewport(imageWidth / 8, imageHeight / 8, imageWidth * 3 / 4, imageHeight * 3 / 4);
-    projection(-1.f / (eye - vCenter).norm());
-    std::vector<Vec4f> screenCoords(3);
-    std::vector<float> zbuffer(imageWidth * imageHeight);
-    for (int i = imageWidth * imageHeight; --i;)
-    {
-        zbuffer[i] = -std::numeric_limits<float>::max();
-    }
-
-    ZShader zshader;
     double posX = 22.0, posY = 11.5;
     double dirX = -1.0, dirY = 0.0;
     double planeX = 0.0, planeY = 0.66;
@@ -271,6 +250,13 @@ int main(int argc, char *argv[])
     cam.vup = {0, 1, 0};
     cam.defocusAngle = 0.6;
     cam.focusDist = 10.0;
+    Vec2f v0 = {491.407, 411.407};
+    Vec2f v1 = {148.593, 68.5928};
+    Vec2f v2 = {148.593, 411.407};
+    SDL_Color c0 = {255, 0, 0, 255};
+    SDL_Color c1 = {0, 255, 0, 255};
+    SDL_Color c2 = {0, 0, 255, 255};
+    float area = v0.edgeFunction(v1, v2);
     SDL_Event event;
     SDL_Window *window;
     SDL_Init(SDL_INIT_VIDEO);
@@ -312,43 +298,29 @@ int main(int argc, char *argv[])
         ImGui::Begin("Rasterization!");
         if (ImGui::Button("Render"))
         {
-            SDL_SetRenderTarget(Camera::image, frame);
             SDL_SetRenderDrawColor(Camera::image, 0, 0, 0, 0);
             SDL_RenderClear(Camera::image);
-            for (int i = 0; i < model->nfaces(); i++)
+            for (int j = 0; j < imageHeight; j++)
             {
-                for (int j = 0; j < 3; j++)
+                for (int i = 0; i < imageWidth; i++)
                 {
-                    zshader.vertex(i, j);
-                }
-
-                zshader.triangle(zshader.varyingTri, Camera::image, zbuffer);
-            }
-
-            for (int x = 0; x < imageWidth; x++)
-            {
-                for (int y = 0; y < imageHeight; y++)
-                {
-                    if (zbuffer[x + (y * imageWidth)] < -1e5)
+                    Vec2f p = {float(i) + 0.5f, float(j) + 0.5f};
+                    float w0 = v1.edgeFunction(v2, p);
+                    float w1 = v2.edgeFunction(v0, p);
+                    float w2 = v0.edgeFunction(v1, p);
+                    if (w0 >= 0 && w1 >= 0 && w2 >= 0)
                     {
-                        continue;
+                        w0 /= area;
+                        w1 /= area;
+                        w2 /= area;
+                        float r = (w0 * float(c0.r)) + (w1 * float(c1.r)) + (w2 * float(c2.r));
+                        float g = (w0 * float(c0.g)) + (w1 * float(c1.g)) + (w2 * float(c2.g));
+                        float b = (w0 * float(c0.b)) + (w1 * float(c1.b)) + (w2 * float(c2.b));
+                        SDL_SetRenderDrawColor(Camera::image, Uint8(r), Uint8(g), Uint8(b), 255);
+                        SDL_RenderDrawPoint(Camera::image, i, j);
                     }
-
-                    float total = 0;
-                    for (float a = 0; a < (M_PI * 2) - 1e-4; a += M_PI / 4)
-                    {
-                        total += float(M_PI / 2) - Vec2f(float(x), float(y)).maxElevationAngle(zbuffer, Vec2f(std::cos(a), std::sin(a)));
-                    }
-
-                    total /= (M_PI / 2) * 8;
-                    total = std::pow(total, 100.f);
-                    SDL_SetRenderDrawColor(Camera::image, Uint8(total * 255), Uint8(total * 255), Uint8(total * 255), 255);
-                    SDL_RenderDrawPoint(Camera::image, x, y);
                 }
             }
-
-            SDL_SetRenderTarget(Camera::image, nullptr);
-            SDL_RenderCopyEx(Camera::image, frame, nullptr, nullptr, 0, nullptr, SDL_FLIP_VERTICAL);
         }
 
         ImGui::End();
