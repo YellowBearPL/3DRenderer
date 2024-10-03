@@ -250,12 +250,24 @@ int main(int argc, char *argv[])
     cam.vup = {0, 1, 0};
     cam.defocusAngle = 0.6;
     cam.focusDist = 10.0;
-    Vec2f v0 = {491.407, 411.407};
-    Vec2f v1 = {148.593, 68.5928};
-    Vec2f v2 = {148.593, 411.407};
+    Vec3f v2 = {-48, -10, 82};
+    Vec3f v1 = {29, -15, 44};
+    Vec3f v0 = {13, 34, 114};
     SDL_Color c0 = {255, 0, 0, 255};
     SDL_Color c1 = {0, 255, 0, 255};
     SDL_Color c2 = {0, 0, 255, 255};
+    v0.x /= v0.z;
+    v0.y /= v0.z;
+    v1.x /= v1.z;
+    v1.y /= v1.z;
+    v2.x /= v2.z;
+    v2.y /= v2.z;
+    v0.x = (1 + v0[0]) * 0.5f * imageWidth;
+    v0[1] = (1 + v0[1]) * 0.5f * imageHeight;
+    v1.x = (1 + v1[0]) * 0.5f * imageWidth;
+    v1[1] = (1 + v1[1]) * 0.5f * imageHeight;
+    v2.x = (1 + v2[0]) * 0.5f * imageWidth;
+    v2[1] = (1 + v2[1]) * 0.5f * imageHeight;
     float area = v0.edgeFunction(v1, v2);
     SDL_Event event;
     SDL_Window *window;
@@ -304,7 +316,7 @@ int main(int argc, char *argv[])
             {
                 for (int i = 0; i < imageWidth; i++)
                 {
-                    Vec2f p = {float(i) + 0.5f, float(j) + 0.5f};
+                    Vec3f p = {static_cast<float>(i + 0.5), static_cast<float>(imageHeight - j + 0.5), 0};
                     float w0 = v1.edgeFunction(v2, p);
                     float w1 = v2.edgeFunction(v0, p);
                     float w2 = v0.edgeFunction(v1, p);

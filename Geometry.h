@@ -153,6 +153,8 @@ public:
     Vec3<T> reflect(const Vec3<T> &n) const { return *this - (2 * dot(n) * n); }
 
     Vec3<T> refract(const Vec3<T> &n, float etaiOverEtat);
+
+    T edgeFunction(const Vec3<T> &b, const Vec3<T> &c) { return (c.x - x) * (b.y - y) - (c.y - y) * (b.x - x); }
 };
 
 using Vec3f = Vec3<float>;
